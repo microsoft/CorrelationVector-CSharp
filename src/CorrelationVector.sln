@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.CorrelationVector", "Microsoft.CorrelationVector\Microsoft.CorrelationVector.csproj", "{6F211D1F-0E72-4C05-9B9B-4DEC3AF01B38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.CorrelationVector.UnitTests", "Microsoft.CorrelationVector.UnitTests\Microsoft.CorrelationVector.UnitTests.csproj", "{EBE497F1-56EA-4BEA-B834-AEEE261BA6B8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6F211D1F-0E72-4C05-9B9B-4DEC3AF01B38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F211D1F-0E72-4C05-9B9B-4DEC3AF01B38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F211D1F-0E72-4C05-9B9B-4DEC3AF01B38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F211D1F-0E72-4C05-9B9B-4DEC3AF01B38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBE497F1-56EA-4BEA-B834-AEEE261BA6B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBE497F1-56EA-4BEA-B834-AEEE261BA6B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBE497F1-56EA-4BEA-B834-AEEE261BA6B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBE497F1-56EA-4BEA-B834-AEEE261BA6B8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0421635B-CD1D-4001-8D21-FA1A33F7B83E}
+	EndGlobalSection
+EndGlobal
