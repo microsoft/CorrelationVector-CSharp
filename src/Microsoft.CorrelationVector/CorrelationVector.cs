@@ -1,4 +1,5 @@
-﻿// <copyright>Copyright (c) Microsoft Corporation. All rights reserved.</copyright>
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Threading;
@@ -37,8 +38,7 @@ namespace Microsoft.CorrelationVector
 
         /// <summary>
         /// Creates a new correlation vector by extending an existing value. This should be
-        /// done at the entry point of an operation. The result should be set to
-        /// <see cref="TransactionContext.Vector"/> on <see cref="Sll.Context"/>.
+        /// done at the entry point of an operation.
         /// </summary>
         /// <param name="correlationVector">
         /// Taken from the message header indicated by <see cref="HeaderName"/>.
@@ -59,8 +59,7 @@ namespace Microsoft.CorrelationVector
 
         /// <summary>
         /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation. The result should be set to
-        /// <see cref="TransactionContext.Vector"/> on <see cref="Sll.Context"/>.
+        /// This should be done at the entry point of an operation.
         /// </summary>
         /// <param name="correlationVector">
         /// Taken from the message header indicated by <see cref="HeaderName"/>.
@@ -80,8 +79,7 @@ namespace Microsoft.CorrelationVector
 
         /// <summary>
         /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation. The result should be set to
-        /// <see cref="TransactionContext.Vector"/> on <see cref="Sll.Context"/>.
+        /// This should be done at the entry point of an operation.
         /// </summary>
         /// <param name="correlationVector">
         /// Taken from the message header indicated by <see cref="HeaderName"/>.
@@ -149,8 +147,7 @@ namespace Microsoft.CorrelationVector
         /// <summary>
         /// Initializes a new instance of the <see cref="CorrelationVector"/> class. This
         /// should only be called when no correlation vector was found in the message
-        /// header. The result should be set to <see cref="TransactionContext.Vector"/> on
-        /// <see cref="Sll.Context"/>.
+        /// header.
         /// </summary>
         public CorrelationVector()
             : this(CorrelationVectorVersion.V1)
@@ -160,8 +157,7 @@ namespace Microsoft.CorrelationVector
         /// <summary>
         /// Initializes a new instance of the <see cref="CorrelationVector"/> class of the
         /// given implemenation version. This should only be called when no correlation
-        /// vector was found in the message header. The result should be set to
-        /// <see cref="TransactionContext.Vector"/> on <see cref="Sll.Context"/>.
+        /// vector was found in the message header.
         /// </summary>
         /// <param name="version">The correlation vector implemenation version.</param>
         public CorrelationVector(CorrelationVectorVersion version)
