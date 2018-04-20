@@ -300,7 +300,8 @@ namespace Microsoft.CorrelationVector
             }
             else
             {
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Invalid correlation vector {0}", correlationVector));
+                //By default not reporting error, just return V1
+                return CorrelationVectorVersion.V1;
             }
         }
 
