@@ -149,7 +149,7 @@ namespace Microsoft.CorrelationVector
             if (!string.IsNullOrEmpty(correlationVector))
             {
                 int p = correlationVector.LastIndexOf('.');
-                bool immutable = correlationVector.EndsWith(CorrelationVector.TerminationSign);
+                bool immutable = CorrelationVector.IsImmutable(correlationVector);
                 if (p > 0)
                 {
                     string extensionValue = immutable ? correlationVector.Substring(p + 1, correlationVector.Length - p - 1 - CorrelationVector.TerminationSign.Length)
