@@ -22,6 +22,8 @@ namespace Microsoft.CorrelationVector
 
         private int extension = 0;
 
+        private bool immutable = false;
+
         private static Random rng = new Random();
 
         /// <summary>
@@ -29,6 +31,12 @@ namespace Microsoft.CorrelationVector
         /// vector.
         /// </summary>
         public const string HeaderName = "MS-CV";
+
+        /// <summary>
+        /// This is termination sign should be used when vector lenght exceeds 
+        /// max allowed length
+        /// </summary>
+        public const string TerminationSign = "!";
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to validate the correlation
@@ -46,6 +54,11 @@ namespace Microsoft.CorrelationVector
         /// <returns>A new correlation vector extended from the current vector.</returns>
         public static CorrelationVector Extend(string correlationVector)
         {
+            if (CorrelationVector.IsImmutable(correlationVector))
+            {
+                return CorrelationVector.Parse(correlationVector);
+            }
+
             CorrelationVectorVersion version = CorrelationVector.InferVersion(
                 correlationVector, CorrelationVector.ValidateCorrelationVectorDuringCreation);
 
@@ -54,7 +67,7 @@ namespace Microsoft.CorrelationVector
                 CorrelationVector.Validate(correlationVector, version);
             }
 
-            return new CorrelationVector(correlationVector, 0, version);
+            return new CorrelationVector(correlationVector, 0, version, false);
         }
 
         /// <summary>
@@ -90,6 +103,11 @@ namespace Microsoft.CorrelationVector
         /// <returns>A new correlation vector extended from the current vector.</returns>
         public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
         {
+            if (CorrelationVector.IsImmutable(correlationVector))
+            {
+                return CorrelationVector.Parse(correlationVector);
+            }
+
             CorrelationVectorVersion version = CorrelationVector.InferVersion(
                 correlationVector, CorrelationVector.ValidateCorrelationVectorDuringCreation);
 
@@ -118,7 +136,7 @@ namespace Microsoft.CorrelationVector
                 s = string.Concat((value >> 32).ToString(), ".", s);
             }
 
-            return new CorrelationVector(string.Concat(correlationVector, ".", s), 0, version);
+            return new CorrelationVector(string.Concat(correlationVector, ".", s), 0, version, false);
         }
 
         /// <summary>
@@ -131,12 +149,15 @@ namespace Microsoft.CorrelationVector
             if (!string.IsNullOrEmpty(correlationVector))
             {
                 int p = correlationVector.LastIndexOf('.');
+                bool immutable = correlationVector.EndsWith(CorrelationVector.TerminationSign);
                 if (p > 0)
                 {
+                    string extensionValue = immutable ? correlationVector.Substring(p + 1, correlationVector.Length - p - 1 - CorrelationVector.TerminationSign.Length)
+                        : correlationVector.Substring(p + 1);
                     int extension;
-                    if (int.TryParse(correlationVector.Substring(p + 1), out extension) && extension >= 0)
+                    if (int.TryParse(extensionValue, out extension) && extension >= 0)
                     {
-                        return new CorrelationVector(correlationVector.Substring(0, p), extension, CorrelationVector.InferVersion(correlationVector, false));
+                        return new CorrelationVector(correlationVector.Substring(0, p), extension, CorrelationVector.InferVersion(correlationVector, false), immutable);
                     }
                 }
             }
@@ -161,7 +182,7 @@ namespace Microsoft.CorrelationVector
         /// </summary>
         /// <param name="version">The correlation vector implemenation version.</param>
         public CorrelationVector(CorrelationVectorVersion version)
-            : this(CorrelationVector.GetUniqueValue(version), 0, version)
+            : this(CorrelationVector.GetUniqueValue(version), 0, version, false)
         {
         }
 
@@ -172,7 +193,7 @@ namespace Microsoft.CorrelationVector
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
         public CorrelationVector(Guid vectorBase)
-            : this(CorrelationVector.GetBaseFromGuid(vectorBase), 0, CorrelationVectorVersion.V2)
+            : this(CorrelationVector.GetBaseFromGuid(vectorBase), 0, CorrelationVectorVersion.V2, false)
         {
         }
 
@@ -183,7 +204,8 @@ namespace Microsoft.CorrelationVector
         {
             get
             {
-                return string.Concat(this.baseVector, ".", this.extension);
+                return string.Concat(this.baseVector, ".", this.extension,
+                    this.immutable ? CorrelationVector.TerminationSign : string.Empty);
             }
         }
 
@@ -197,6 +219,10 @@ namespace Microsoft.CorrelationVector
         /// </returns>
         public string Increment()
         {
+            if (this.immutable)
+            {
+                return this.Value;
+            }
             int snapshot = 0;
             int next = 0;
             do
@@ -207,12 +233,9 @@ namespace Microsoft.CorrelationVector
                     return this.Value;
                 }
                 next = snapshot + 1;
-                int size = baseVector.Length + 1 + (int)Math.Log10(next) + 1;
-                if ((this.Version == CorrelationVectorVersion.V1 &&
-                     size > CorrelationVector.MaxVectorLength) ||
-                    (this.Version == CorrelationVectorVersion.V2 &&
-                     size > CorrelationVector.MaxVectorLengthV2))
+                if (CorrelationVector.IsOversized(this.baseVector, next, this.Version))
                 {
+                    this.immutable = true;
                     return this.Value;
                 }
             }
@@ -254,11 +277,12 @@ namespace Microsoft.CorrelationVector
             return string.Equals(this.Value, vector.Value, StringComparison.Ordinal);
         }
 
-        private CorrelationVector(string baseVector, int extension, CorrelationVectorVersion version)
+        private CorrelationVector(string baseVector, int extension, CorrelationVectorVersion version, bool immutable)
         {
             this.baseVector = baseVector;
             this.extension = extension;
             this.Version = version;
+            this.immutable = immutable || CorrelationVector.IsOversized(baseVector, extension, version);
         }
 
         private static string GetBaseFromGuid(Guid guid)
@@ -303,6 +327,25 @@ namespace Microsoft.CorrelationVector
                 //By default not reporting error, just return V1
                 return CorrelationVectorVersion.V1;
             }
+        }
+
+        private static bool IsImmutable(string correlationVector)
+        {
+            return !string.IsNullOrEmpty(correlationVector) && correlationVector.EndsWith(CorrelationVector.TerminationSign);
+        }
+
+        private static bool IsOversized(string baseVector, int extension, CorrelationVectorVersion version)
+        {
+            if (!string.IsNullOrEmpty(baseVector))
+            {
+                int size = baseVector.Length + 1 +
+                    (extension > 0 ? (int)Math.Log10(extension) : 0) + 1;
+                return ((version == CorrelationVectorVersion.V1 &&
+                      size > CorrelationVector.MaxVectorLength) ||
+                     (version == CorrelationVectorVersion.V2 &&
+                      size > CorrelationVector.MaxVectorLengthV2));
+            }
+            return false;
         }
 
         private static void Validate(string correlationVector, CorrelationVectorVersion version)

@@ -17,7 +17,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             var correlationVector = new CorrelationVector();
             var splitVector = correlationVector.Value.Split('.');
-            
+
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
             Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 16 character long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
@@ -191,7 +191,7 @@ namespace Microsoft.CorrelationVector.UnitTests
                 var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.11111111111111111111111111111");
             });
         }
-        
+
         [TestMethod]
         public void IncrementPastMaxWithNoErrors()
         {
@@ -206,12 +206,13 @@ namespace Microsoft.CorrelationVector.UnitTests
             }
 
             // We hit 63 chars so we silently stopped counting
-            Assert.IsTrue(vector.Value == "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.9");
+            Assert.IsTrue(vector.Value == "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.9!");
         }
 
         [TestMethod]
         public void IncrementPastMaxWithNoErrorsV2()
         {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
             vector.Increment();
             Assert.IsTrue(vector.Value == "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1");
@@ -222,7 +223,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             }
 
             // We hit 127 chars so we silently stopped counting
-            Assert.IsTrue(vector.Value == "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.9");
+            Assert.IsTrue(vector.Value == "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.9!");
         }
 
         [TestMethod]
@@ -257,6 +258,76 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // The counter should wrap at most 1 time.
             Assert.IsTrue(wrappedCounter <= 1);
+        }
+
+        [TestMethod]
+        public void SpinPastMaxWithTerminationSign()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Spin("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479");
+            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+        }
+
+        [TestMethod]
+        public void SpinPastMaxWithTerminationSignV2()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Spin("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
+            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+        }
+
+        [TestMethod]
+        public void ExtendPastMaxWithTerminationSign()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.1");
+            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+        }
+
+        [TestMethod]
+        public void ExtendPastMaxWithTerminationSignV2()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1");
+            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+        }
+
+        [TestMethod]
+        public void ImmutableWithTerminationSign()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string cv = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.0!";
+
+            var vector = CorrelationVector.Extend(cv);
+            //extend do nothing
+            Assert.IsTrue(vector.Value == cv);
+
+            vector = CorrelationVector.Spin(cv);
+            //Spin do nothing
+            Assert.IsTrue(vector.Value == cv);
+
+            vector.Increment();
+            // Increment do nothing since it has termination sign
+            Assert.IsTrue(vector.Value == cv);
+        }
+
+        [TestMethod]
+        public void ImmutableWithTerminationSignV2()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string cv = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.0!";
+            var vector = CorrelationVector.Extend(cv);
+            //extend do nothing
+            Assert.IsTrue(vector.Value == cv);
+
+
+            vector = CorrelationVector.Spin(cv);
+            //Spin do nothing
+            Assert.IsTrue(vector.Value == cv);
+
+            vector.Increment();
+            // Increment do nothing since it has termination sign
+            Assert.IsTrue(vector.Value == cv);
         }
     }
 }
