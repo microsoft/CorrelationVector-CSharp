@@ -264,32 +264,36 @@ namespace Microsoft.CorrelationVector.UnitTests
         public void SpinPastMaxWithTerminationSign()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVector.Spin("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479");
-            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+            const string baseVector = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.214748364.23";
+            var vector = CorrelationVector.Spin(baseVector);
+            Assert.IsTrue(vector.Value == (string.Concat(baseVector, CorrelationVector.TerminationSign)));
         }
 
         [TestMethod]
         public void SpinPastMaxWithTerminationSignV2()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVector.Spin("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
-            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+            const string baseVector = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214";
+            var vector = CorrelationVector.Spin(baseVector);
+            Assert.IsTrue(vector.Value == (string.Concat(baseVector, CorrelationVector.TerminationSign)));
         }
 
         [TestMethod]
         public void ExtendPastMaxWithTerminationSign()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.1");
-            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+            const string baseVector = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.214748364.23";
+            var vector = CorrelationVector.Extend(baseVector);
+            Assert.IsTrue(vector.Value == (string.Concat(baseVector, CorrelationVector.TerminationSign)));
         }
 
         [TestMethod]
         public void ExtendPastMaxWithTerminationSignV2()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1");
-            Assert.IsTrue(vector.Value.EndsWith(CorrelationVector.TerminationSign));
+            const string baseVector = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2141";
+            var vector = CorrelationVector.Extend(baseVector);
+            Assert.IsTrue(vector.Value == (string.Concat(baseVector, CorrelationVector.TerminationSign)));
         }
 
         [TestMethod]

@@ -67,6 +67,11 @@ namespace Microsoft.CorrelationVector
                 CorrelationVector.Validate(correlationVector, version);
             }
 
+            if (CorrelationVector.IsOversized(correlationVector, 0, version))
+            {
+                return CorrelationVector.Parse(correlationVector + CorrelationVector.TerminationSign);
+            }
+
             return new CorrelationVector(correlationVector, 0, version, false);
         }
 
@@ -136,7 +141,13 @@ namespace Microsoft.CorrelationVector
                 s = string.Concat((value >> 32).ToString(), ".", s);
             }
 
-            return new CorrelationVector(string.Concat(correlationVector, ".", s), 0, version, false);
+            string baseVector = string.Concat(correlationVector, ".", s);
+            if (CorrelationVector.IsOversized(baseVector, 0, version))
+            {
+                return CorrelationVector.Parse(correlationVector + CorrelationVector.TerminationSign);
+            }
+
+            return new CorrelationVector(baseVector, 0, version, false);
         }
 
         /// <summary>
