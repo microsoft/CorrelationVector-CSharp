@@ -198,7 +198,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479");
             vector.Increment();
-            Assert.AreEqual(vector.Value, "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.1");
+            Assert.AreEqual("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.1", vector.Value);
 
             for (int i = 0; i < 20; i++)
             {
@@ -206,7 +206,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             }
 
             // We hit 63 chars so we silently stopped counting
-            Assert.AreEqual(vector.Value, "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.9!");
+            Assert.AreEqual("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.9!", vector.Value);
         }
 
         [TestMethod]
@@ -215,7 +215,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
             vector.Increment();
-            Assert.AreEqual(vector.Value, "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1");
+            Assert.AreEqual("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1", vector.Value);
 
             for (int i = 0; i < 20; i++)
             {
@@ -223,7 +223,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             }
 
             // We hit 127 chars so we silently stopped counting
-            Assert.AreEqual(vector.Value, "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.9!");
+            Assert.AreEqual("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.9!", vector.Value);
         }
 
         [TestMethod]
@@ -268,7 +268,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 63 chars limit, will append "!" to vector
             var vector = CorrelationVector.Spin(baseVector);
-            Assert.AreEqual(vector.Value, (string.Concat(baseVector, CorrelationVector.TerminationSign)));
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -279,7 +279,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Spin(baseVector);
-            Assert.AreEqual(vector.Value, (string.Concat(baseVector, CorrelationVector.TerminationSign)));
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -290,7 +290,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 63 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
-            Assert.AreEqual(vector.Value, (string.Concat(baseVector, CorrelationVector.TerminationSign)));
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -301,7 +301,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
-            Assert.AreEqual(vector.Value, (string.Concat(baseVector, CorrelationVector.TerminationSign)));
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -312,15 +312,15 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             var vector = CorrelationVector.Extend(cv);
             //extend do nothing
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
 
             vector = CorrelationVector.Spin(cv);
             //Spin do nothing
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
 
             vector.Increment();
             // Increment do nothing since it has termination sign
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
         }
 
         [TestMethod]
@@ -330,15 +330,15 @@ namespace Microsoft.CorrelationVector.UnitTests
             const string cv = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.0!";
             var vector = CorrelationVector.Extend(cv);
             //extend do nothing
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
 
             vector = CorrelationVector.Spin(cv);
             //Spin do nothing
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
 
             vector.Increment();
             // Increment do nothing since it has termination sign
-            Assert.AreEqual(vector.Value, cv);
+            Assert.AreEqual(cv, vector.Value);
         }
     }
 }
