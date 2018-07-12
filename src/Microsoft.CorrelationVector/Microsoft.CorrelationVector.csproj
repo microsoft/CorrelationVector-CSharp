@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <Company>Microsoft</Company>
+    <Authors>Microsoft</Authors>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/Microsoft/CorrelationVector-CSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Microsoft/CorrelationVector-CSharp</RepositoryUrl>
+    <PackageTags>CorrelationVector Codex Microsoft Monitoring</PackageTags>
+    <PackageLicenseUrl>https://cla.microsoft.com</PackageLicenseUrl>
   </PropertyGroup>
 
 </Project>
