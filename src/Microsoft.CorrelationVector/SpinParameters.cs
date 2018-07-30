@@ -74,7 +74,7 @@ namespace Microsoft.CorrelationVector
     /// <summary>
     /// This class stores parameters used by the CorrelationVector Spin operator.
     /// </summary>
-    public class SpinParameters : MarshalByRefObject
+    public class SpinParameters
     {
         // Internal value for entropy bytes.
         private int entropyBytes;

@@ -11,7 +11,7 @@ namespace Microsoft.CorrelationVector
     /// This class represents a lightweight vector for identifying and measuring
     /// causality.
     /// </summary>
-    public sealed partial class CorrelationVector : MarshalByRefObject
+    public sealed partial class CorrelationVector
     {
         private const byte MaxVectorLength = 63;
         private const byte MaxVectorLengthV2 = 127;
