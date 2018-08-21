@@ -3,6 +3,7 @@
 CorrelationVector-CSharp provides the CSharp implementation of the CorrelationVector protocol for tracing and correlation of events through a distributed system.
 
 # Correlation Vector
+## Background
 
 **Correlation Vector** (a.k.a. **cV**) is a format and protocol standard for tracing and correlation of events through a distributed system based on a light weight vector clock.
 The standard is widely used internally at Microsoft for first party applications and services and supported across multiple logging libraries and platforms (Services, Clients - Native, Managed, Js, iOS, Android etc). The standard powers a variety of different data processing needs ranging from distributed tracing & debugging to system and business intelligence, in various business organizations.
