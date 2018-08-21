@@ -1,6 +1,6 @@
 # Correlation Vector-CSharp
 
-The library provides sample reference implementation to support various operations to manage the correlation vector in distributed debugging and correlated analytics scenarios. 
+CorrelationVector-CSharp provides the CSharp implementation of the CorrelationVector protocol for tracing and correlation of events through a distributed system.
 
 # Correlation Vector
 
