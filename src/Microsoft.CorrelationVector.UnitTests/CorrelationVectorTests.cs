@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CorrelationVector;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.CorrelationVector.UnitTests
@@ -55,6 +53,71 @@ namespace Microsoft.CorrelationVector.UnitTests
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
             Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 character long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
+        }
+
+        [TestMethod]
+        public void GetBaseAsGuidTest()
+        {
+            var guid = System.Guid.NewGuid();
+            var correlationVector = new CorrelationVector(guid);
+            Guid baseAsGuid = correlationVector.GetBaseAsGuid();
+
+            Assert.AreEqual(guid, baseAsGuid, "Correlation Vector base as a guid should be the same as the initial guid");
+        }
+
+        [TestMethod]
+        public void GetBaseAsGuidForInvalidGuidVectorBaseTest()
+        {
+            // CV base which has four non-zero least significant bits meaning conversion to Guid will lose information.
+            // CV Base -> Guid -> CV Base conversion results in:
+            //   /////////////////////B -> ffffffff-ffff-ffff-ffff-fffffffffffc -> /////////////////////A
+            string vectorBase = "/////////////////////B";
+            Guid vectorBaseGuid = Guid.Parse("ffffffff-ffff-ffff-ffff-fffffffffffc");
+
+            try
+            {
+                var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
+
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+                Guid baseAsGuid = correlationVector.GetBaseAsGuid();
+                Assert.AreEqual(vectorBaseGuid, baseAsGuid, "Correlation Vector base as a guid should be the same as the expected guid");
+
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
+                Assert.ThrowsException<InvalidOperationException>(() => correlationVector.GetBaseAsGuid());
+            }
+            finally
+            {
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            }
+        }
+
+        [TestMethod]
+        public void ConvertFromVectorBaseToGuidBackToVectorBase()
+        {
+            // CV bases which have four zero least significant bits meaning a conversion to a Guid will retain all
+            // information.
+            // CV Base -> Guid -> CV Base conversions result in:
+            //   /////////////////////A -> ffffffff-ffff-ffff-ffff-fffffffffffc -> /////////////////////A
+            //   /////////////////////Q -> ffffffff-ffff-ffff-ffff-fffffffffffd -> /////////////////////Q
+            //   /////////////////////g -> ffffffff-ffff-ffff-ffff-fffffffffffe -> /////////////////////g
+            //   /////////////////////w -> ffffffff-ffff-ffff-ffff-ffffffffffff -> /////////////////////w
+            string[] validGuidVectorBases = new string[]
+            {
+                "/////////////////////A",
+                "/////////////////////Q",
+                "/////////////////////g",
+                "/////////////////////w",
+            };
+
+            foreach (string vectorBase in validGuidVectorBases)
+            {
+                var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
+                Guid baseAsGuid = correlationVector.GetBaseAsGuid();
+                var correlationVectorFromGuid = new CorrelationVector(baseAsGuid);
+
+                Assert.AreEqual(correlationVector.Value, correlationVectorFromGuid.Value,
+                    $"Correlation vector base -> guid -> correlation vector base should result in the same vector for {vectorBase}");
+            }
         }
 
         [TestMethod]
