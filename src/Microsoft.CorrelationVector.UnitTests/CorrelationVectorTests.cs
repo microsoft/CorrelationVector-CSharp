@@ -56,7 +56,16 @@ namespace Microsoft.CorrelationVector.UnitTests
         }
 
         [TestMethod]
-        public void GetBaseAsGuidTest()
+        public void GetBaseAsGuidV1Test()
+        {
+            var correlationVector = new CorrelationVector(CorrelationVectorVersion.V1);
+
+            Assert.ThrowsException<InvalidOperationException>(() => correlationVector.GetBaseAsGuid(),
+                "V1 correlation vector base cannot be converted to a guid");
+        }
+
+        [TestMethod]
+        public void GetBaseAsGuidV2Test()
         {
             var guid = System.Guid.NewGuid();
             var correlationVector = new CorrelationVector(guid);
@@ -116,7 +125,7 @@ namespace Microsoft.CorrelationVector.UnitTests
                 var correlationVectorFromGuid = new CorrelationVector(baseAsGuid);
 
                 Assert.AreEqual(correlationVector.Value, correlationVectorFromGuid.Value,
-                    $"Correlation vector base -> guid -> correlation vector base should result in the same vector for {vectorBase}");
+                    $"Correlation vector base -> guid -> correlation vector base should result in the same vector base for {vectorBase}");
             }
         }
 
