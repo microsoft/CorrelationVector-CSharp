@@ -11,14 +11,14 @@ namespace Microsoft.CorrelationVector
     /// This class represents a lightweight vector for identifying and measuring
     /// causality.
     /// </summary>
-    public sealed partial class CorrelationVector
+    public sealed class CorrelationVector
     {
-        private const byte MaxVectorLength = 63;
-        private const byte MaxVectorLengthV2 = 127;
-        private const byte BaseLength = 16;
-        private const byte BaseLengthV2 = 22;
+        internal const byte MaxVectorLength = 63;
+        internal const byte MaxVectorLengthV2 = 127;
+        internal const byte BaseLength = 16;
+        internal const byte BaseLengthV2 = 22;
 
-        private readonly string baseVector = null;
+        internal readonly string BaseVector = null;
 
         private int extension = 0;
 
@@ -204,7 +204,7 @@ namespace Microsoft.CorrelationVector
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
         public CorrelationVector(Guid vectorBase)
-            : this(CorrelationVector.GetBaseFromGuid(vectorBase), 0, CorrelationVectorVersion.V2, false)
+            : this(vectorBase.GetBaseFromGuid(), 0, CorrelationVectorVersion.V2, false)
         {
         }
 
@@ -215,7 +215,7 @@ namespace Microsoft.CorrelationVector
         {
             get
             {
-                return string.Concat(this.baseVector, ".", this.extension,
+                return string.Concat(this.BaseVector, ".", this.extension,
                     this.immutable ? CorrelationVector.TerminationSign : string.Empty);
             }
         }
@@ -244,14 +244,14 @@ namespace Microsoft.CorrelationVector
                     return this.Value;
                 }
                 next = snapshot + 1;
-                if (CorrelationVector.IsOversized(this.baseVector, next, this.Version))
+                if (CorrelationVector.IsOversized(this.BaseVector, next, this.Version))
                 {
                     this.immutable = true;
                     return this.Value;
                 }
             }
             while (snapshot != Interlocked.CompareExchange(ref this.extension, next, snapshot));
-            return string.Concat(this.baseVector, ".", next);
+            return string.Concat(this.BaseVector, ".", next);
         }
 
         /// <summary>
@@ -290,18 +290,10 @@ namespace Microsoft.CorrelationVector
 
         private CorrelationVector(string baseVector, int extension, CorrelationVectorVersion version, bool immutable)
         {
-            this.baseVector = baseVector;
+            this.BaseVector = baseVector;
             this.extension = extension;
             this.Version = version;
             this.immutable = immutable || CorrelationVector.IsOversized(baseVector, extension, version);
-        }
-
-        private static string GetBaseFromGuid(Guid guid)
-        {
-            byte[] bytes = guid.ToByteArray();
-
-            // Removes the base64 padding
-            return Convert.ToBase64String(bytes).Substring(0, CorrelationVector.BaseLengthV2);
         }
 
         private static string GetUniqueValue(CorrelationVectorVersion version)
@@ -313,7 +305,7 @@ namespace Microsoft.CorrelationVector
             }
             else if (CorrelationVectorVersion.V2 == version)
             {
-                return CorrelationVector.GetBaseFromGuid(Guid.NewGuid());
+                return Guid.NewGuid().GetBaseFromGuid();
             }
             else
             {
