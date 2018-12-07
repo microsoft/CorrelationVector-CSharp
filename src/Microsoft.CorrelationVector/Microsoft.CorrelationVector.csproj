@@ -7,12 +7,15 @@
     <PackageProjectUrl>https://github.com/Microsoft/CorrelationVector-CSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Microsoft/CorrelationVector-CSharp</RepositoryUrl>
     <PackageTags>CorrelationVector Codex Microsoft Monitoring</PackageTags>
-    <PackageLicenseUrl>https://cla.microsoft.com</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Version>1.0.0</Version>
     <SignAssembly>false</SignAssembly>
     <DelaySign>true</DelaySign>
     <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <Description>This package provides a reference C# implementation of the CorrelationVector protocol for tracing and correlation of events through a distributed system.</Description>
   </PropertyGroup>
 </Project>
