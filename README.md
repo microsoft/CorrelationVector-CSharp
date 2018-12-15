@@ -1,6 +1,6 @@
-# Correlation Vector-CSharp
+# Correlation Vector-CSharp [![](https://img.shields.io/nuget/v/Microsoft.CorrelationVector.svg)](https://www.nuget.org/packages/Microsoft.CorrelationVector/)
 
-CorrelationVector-CSharp provides the CSharp implementation of the CorrelationVector protocol for tracing and correlation of events through a distributed system.
+CorrelationVector-CSharp provides the CSharp implementation of the CorrelationVector protocol for tracing and correlation of events through a distributed system. 
 
 # Correlation Vector
 ## Background
