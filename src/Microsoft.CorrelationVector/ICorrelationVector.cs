@@ -6,6 +6,7 @@ namespace Microsoft.CorrelationVector
 {
     /// <summary>
     /// This interface represents the Correlation Vector.
+    /// The Correlation Vector is a format for tracing and correlating events in large systems.
     /// </summary>
     public interface ICorrelationVector
     {
@@ -113,5 +114,13 @@ namespace Microsoft.CorrelationVector
         /// No return value. Throws ArgumentException if invalid.
         /// </returns>
         void Validate(string correlationVector);
+
+        /// <summary>
+        /// Creates a new correlation vector when the total vector length (the <see cref="Value"/>) is longer than its maximum length.
+        /// Not used in Correlation vectors earlier than V3.
+        /// </summary>
+        /// <param name="correlationVector">A correlationVector to be reset.</param>
+        /// <returns>A Correlation Vector class.</returns>
+        ICorrelationVector Reset(string correlationVector);
     }
 }
