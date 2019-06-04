@@ -19,14 +19,6 @@ namespace Microsoft.CorrelationVector
         }
 
         /// <summary>
-        /// This is the maximum vector length before it has to be reset or terminated.
-        /// </summary>
-        byte MaxVectorLength
-        {
-            get;
-        }
-
-        /// <summary>
         /// Increments the extension, the numerical value at the end of the vector, by one
         /// and returns the string representation.
         /// </summary>

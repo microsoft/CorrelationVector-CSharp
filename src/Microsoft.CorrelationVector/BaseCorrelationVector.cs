@@ -18,7 +18,10 @@ namespace Microsoft.CorrelationVector
         public abstract string Base { get; }
         public abstract int Extension { get; }
         protected const string HeaderName = "MS-CV";
-        public abstract byte MaxVectorLength { get; }
+        /// <summary>
+        /// This is the maximum vector length before it has to be reset or terminated.
+        /// </summary>
+        internal const byte MaxVectorLength = 127;
         /// <summary>
         /// Determines whether two instances of the <see cref="ICorrelationVector"/> class
         /// are equal. 
@@ -44,12 +47,10 @@ namespace Microsoft.CorrelationVector
             CorrelationVectorVersion version = BaseCorrelationVector.InferVersion(correlationVector);
             switch (version)
             {
-                /*
                 case CorrelationVectorVersion.V1:
                     return CorrelationVector.Parse(correlationVector);
                 case CorrelationVectorVersion.V2:
                     return CorrelationVector.Parse(correlationVector);
-                */
                 default:
                     return null;
             }
