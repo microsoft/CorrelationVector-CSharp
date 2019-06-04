@@ -16,7 +16,7 @@ namespace Microsoft.CorrelationVector
         }
         public abstract string Value { get; }
         public abstract string Base { get; }
-        public abstract int extension { get; }
+        public abstract int Extension { get; }
         protected const string HeaderName = "MS-CV";
         public abstract byte MaxVectorLength { get; }
         /// <summary>
