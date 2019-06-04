@@ -20,7 +20,7 @@ namespace Microsoft.CorrelationVector
             byte[] bytes = guid.ToByteArray();
 
             // Removes the base64 padding
-            return Convert.ToBase64String(bytes).Substring(0, CorrelationVector.BaseLengthV2);
+            return Convert.ToBase64String(bytes).Substring(0, CorrelationVectorV1.BaseLengthV2);
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.CorrelationVector
                 throw new InvalidOperationException("Cannot convert a V1 correlation vector base to a guid.");
             }
 
-            if (CorrelationVector.ValidateCorrelationVectorDuringCreation)
+            if (CorrelationVectorV2.ValidateCorrelationVectorDuringCreation)
             {
                 // In order to reliably convert a V2 vector base to a guid, the four least significant bits of the last
                 // base64 content-bearing 6-bit block must be zeros.
@@ -43,7 +43,7 @@ namespace Microsoft.CorrelationVector
                 // Q - 01 0000
                 // g - 10 0000
                 // w - 11 0000
-                char lastChar = correlationVector.BaseVector[CorrelationVector.BaseLengthV2 - 1];
+                char lastChar = correlationVector.Base[CorrelationVectorV1.BaseLengthV2 - 1];
 
                 if (lastChar != 'A' && lastChar != 'Q' && lastChar != 'g' && lastChar != 'w')
                 {
@@ -52,7 +52,7 @@ namespace Microsoft.CorrelationVector
                 }
             }
 
-            return new Guid(Convert.FromBase64String(correlationVector.BaseVector + "=="));
+            return new Guid(Convert.FromBase64String(correlationVector.Base + "=="));
         }
     }
 }
