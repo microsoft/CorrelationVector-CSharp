@@ -47,10 +47,12 @@ namespace Microsoft.CorrelationVector
             CorrelationVectorVersion version = BaseCorrelationVector.InferVersion(correlationVector);
             switch (version)
             {
+                /*
                 case CorrelationVectorVersion.V1:
                     return CorrelationVector.Parse(correlationVector);
                 case CorrelationVectorVersion.V2:
                     return CorrelationVector.Parse(correlationVector);
+                    */
                 default:
                     return null;
             }
