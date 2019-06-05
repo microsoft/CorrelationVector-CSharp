@@ -43,7 +43,7 @@ namespace Microsoft.CorrelationVector
                 // Q - 01 0000
                 // g - 10 0000
                 // w - 11 0000
-                char lastChar = correlationVector.Base[CorrelationVectorV1.BaseLengthV2 - 1];
+                char lastChar = correlationVector.Base[CorrelationVectorV2.BaseLengthV2 - 1];
 
                 if (lastChar != 'A' && lastChar != 'Q' && lastChar != 'g' && lastChar != 'w')
                 {
