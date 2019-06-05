@@ -74,7 +74,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             try
             {
-                CorrelationVectorV2 correlationVector = (CorrelationVectorV2) CorrelationVector.Parse($"{vectorBase}.0");
+                var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
 
                 CorrelationVectorV2.ValidateCorrelationVectorDuringCreation = false;
                 Guid baseAsGuid = correlationVector.GetBaseAsGuid();
@@ -109,7 +109,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             foreach (string vectorBase in validGuidVectorBases)
             {
-                CorrelationVectorV2 correlationVector = (CorrelationVectorV2) CorrelationVector.Parse($"{vectorBase}.0");
+                var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
                 Guid baseAsGuid = correlationVector.GetBaseAsGuid();
                 var correlationVectorFromGuid = new CorrelationVectorV2(baseAsGuid);
 
