@@ -228,7 +228,8 @@ namespace Microsoft.CorrelationVector
 
         private static string GetUniqueValue()
         {
-            return Guid.NewGuid().GetBaseFromGuid();
+            byte[] bytes = Guid.NewGuid().ToByteArray();
+            return Convert.ToBase64String(bytes, 0, 12);
         }
 
         private static bool IsImmutable(string correlationVector)
