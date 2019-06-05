@@ -14,23 +14,31 @@ namespace Microsoft.CorrelationVector
         {
 
         }
+
         public abstract string Value { get; }
+
         public abstract string Base { get; }
+
         public abstract int Extension { get; }
+
         protected const string HeaderName = "MS-CV";
+
         public CorrelationVectorVersion Version {
             get;
             protected set;
         }
+
         /// <summary>
         /// Gets or sets a value indicating whether or not to validate the correlation
         /// vector on creation.
         /// </summary>
         public static bool ValidateCorrelationVectorDuringCreation { get; set; }
+
         /// <summary>
         /// This is the maximum vector length before it has to be reset or terminated.
         /// </summary>
         internal const byte MaxVectorLength = 127;
+
         /// <summary>
         /// Determines whether two instances of the <see cref="ICorrelationVector"/> class
         /// are equal. 
@@ -89,11 +97,13 @@ namespace Microsoft.CorrelationVector
             return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Extend, CorrelationVectorV2.Extend);
 
         }
+
         public static CorrelationVector Spin(string correlationVector)
         {
             CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
             return RunStaticMethod(correlationVector, version, NotHandledMethod, CorrelationVectorV2.Spin);
         }
+
         public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
         {
             CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
@@ -136,6 +146,7 @@ namespace Microsoft.CorrelationVector
         }
 
         public abstract Tuple<string, string> Reset();
+
         public abstract string Increment();
     }
 }
