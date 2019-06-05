@@ -20,7 +20,7 @@ namespace Microsoft.CorrelationVector
             byte[] bytes = guid.ToByteArray();
 
             // Removes the base64 padding
-            return Convert.ToBase64String(bytes).Substring(0, CorrelationVectorV1.BaseLengthV2);
+            return Convert.ToBase64String(bytes).Substring(0, CorrelationVectorV2.BaseLength);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Microsoft.CorrelationVector
                 // Q - 01 0000
                 // g - 10 0000
                 // w - 11 0000
-                char lastChar = correlationVector.Base[CorrelationVectorV2.BaseLengthV2 - 1];
+                char lastChar = correlationVector.Base[CorrelationVectorV2.BaseLength - 1];
 
                 if (lastChar != 'A' && lastChar != 'Q' && lastChar != 'g' && lastChar != 'w')
                 {

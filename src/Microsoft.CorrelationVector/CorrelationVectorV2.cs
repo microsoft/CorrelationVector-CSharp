@@ -13,10 +13,8 @@ namespace Microsoft.CorrelationVector
     /// </summary>
     public sealed class CorrelationVectorV2 : CorrelationVector
     {
-        internal new const byte MaxVectorLength = 63;
-        internal const byte MaxVectorLengthV2 = 127;
-        internal const byte BaseLength = 16;
-        internal const byte BaseLengthV2 = 22;
+        internal new const byte MaxVectorLength = 127;
+        internal const byte BaseLength = 22;
 
         internal readonly string BaseVector = null;
 
@@ -53,20 +51,17 @@ namespace Microsoft.CorrelationVector
                 return CorrelationVectorV2.Parse(correlationVector);
             }
 
-            CorrelationVectorVersion version = CorrelationVectorV2.InferVersion(
-                correlationVector, CorrelationVectorV2.ValidateCorrelationVectorDuringCreation);
-
             if (CorrelationVectorV2.ValidateCorrelationVectorDuringCreation)
             {
-                CorrelationVectorV2.Validate(correlationVector, version);
+                CorrelationVectorV2.Validate(correlationVector);
             }
 
-            if (CorrelationVectorV2.IsOversized(correlationVector, 0, version))
+            if (CorrelationVectorV2.IsOversized(correlationVector, 0))
             {
                 return CorrelationVectorV2.Parse(correlationVector + CorrelationVectorV2.TerminationSign);
             }
 
-            return new CorrelationVectorV2(correlationVector, 0, version, false);
+            return new CorrelationVectorV2(correlationVector, 0, false);
         }
 
         /// <summary>
@@ -107,12 +102,9 @@ namespace Microsoft.CorrelationVector
                 return CorrelationVectorV2.Parse(correlationVector);
             }
 
-            CorrelationVectorVersion version = CorrelationVectorV2.InferVersion(
-                correlationVector, CorrelationVectorV2.ValidateCorrelationVectorDuringCreation);
-
             if (CorrelationVectorV2.ValidateCorrelationVectorDuringCreation)
             {
-                CorrelationVectorV2.Validate(correlationVector, version);
+                CorrelationVectorV2.Validate(correlationVector);
             }
 
             byte[] entropy = new byte[parameters.EntropyBytes];
@@ -136,12 +128,12 @@ namespace Microsoft.CorrelationVector
             }
 
             string baseVector = string.Concat(correlationVector, ".", s);
-            if (CorrelationVectorV2.IsOversized(baseVector, 0, version))
+            if (CorrelationVectorV2.IsOversized(baseVector, 0))
             {
                 return CorrelationVectorV2.Parse(correlationVector + CorrelationVectorV2.TerminationSign);
             }
 
-            return new CorrelationVectorV2(baseVector, 0, version, false);
+            return new CorrelationVectorV2(baseVector, 0, false);
         }
 
         /// <summary>
@@ -162,7 +154,7 @@ namespace Microsoft.CorrelationVector
                     int extension;
                     if (int.TryParse(extensionValue, out extension) && extension >= 0)
                     {
-                        return new CorrelationVectorV2(correlationVector.Substring(0, p), extension, CorrelationVectorV2.InferVersion(correlationVector, false), immutable);
+                        return new CorrelationVectorV2(correlationVector.Substring(0, p), extension,  immutable);
                     }
                 }
             }
@@ -171,23 +163,12 @@ namespace Microsoft.CorrelationVector
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVectorV2"/> class. This
-        /// should only be called when no correlation vector was found in the message
-        /// header.
-        /// </summary>
-        public CorrelationVectorV2()
-            : this(CorrelationVectorVersion.V1)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVectorV2"/> class of the
-        /// given implemenation version. This should only be called when no correlation
+        /// Initializes a new instance of the <see cref="CorrelationVectorV2"/> class. 
+        /// This should only be called when no correlation
         /// vector was found in the message header.
         /// </summary>
-        /// <param name="version">The correlation vector implemenation version.</param>
-        public CorrelationVectorV2(CorrelationVectorVersion version)
-            : this(CorrelationVectorV2.GetUniqueValue(version), 0, version, false)
+        public CorrelationVectorV2()
+            : this(CorrelationVectorV2.GetUniqueValue(), 0, false)
         {
         }
 
@@ -198,7 +179,7 @@ namespace Microsoft.CorrelationVector
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
         public CorrelationVectorV2(Guid vectorBase)
-            : this(vectorBase.GetBaseFromGuid(), 0, CorrelationVectorVersion.V2, false)
+            : this(vectorBase.GetBaseFromGuid(), 0, false)
         {
         }
 
@@ -238,7 +219,7 @@ namespace Microsoft.CorrelationVector
                     return this.Value;
                 }
                 next = snapshot + 1;
-                if (CorrelationVectorV2.IsOversized(this.BaseVector, next, this.Version))
+                if (CorrelationVectorV2.IsOversized(this.BaseVector, next))
                 {
                     this.immutable = true;
                     return this.Value;
@@ -290,48 +271,17 @@ namespace Microsoft.CorrelationVector
             return string.Equals(this.Value, vector.Value, StringComparison.Ordinal);
         }
 
-        private CorrelationVectorV2(string baseVector, int extension, CorrelationVectorVersion version, bool immutable)
+        private CorrelationVectorV2(string baseVector, int extension, bool immutable)
         {
             this.BaseVector = baseVector;
             this.extension = extension;
-            this.Version = version;
-            this.immutable = immutable || CorrelationVectorV2.IsOversized(baseVector, extension, version);
+            this.Version = CorrelationVectorVersion.V2;
+            this.immutable = immutable || CorrelationVectorV2.IsOversized(baseVector, extension);
         }
 
-        private static string GetUniqueValue(CorrelationVectorVersion version)
+        private static string GetUniqueValue()
         {
-            if (CorrelationVectorVersion.V1 == version)
-            {
-                byte[] bytes = Guid.NewGuid().ToByteArray();
-                return Convert.ToBase64String(bytes, 0, 12);
-            }
-            else if (CorrelationVectorVersion.V2 == version)
-            {
-                return Guid.NewGuid().GetBaseFromGuid();
-            }
-            else
-            {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Unsupported correlation vector version: {0}", version));
-            }
-        }
-
-        private static CorrelationVectorVersion InferVersion(string correlationVector, bool reportErrors)
-        {
-            int index = correlationVector == null ? -1 : correlationVector.IndexOf('.');
-
-            if (CorrelationVectorV2.BaseLength == index)
-            {
-                return CorrelationVectorVersion.V1;
-            }
-            else if (CorrelationVectorV2.BaseLengthV2 == index)
-            {
-                return CorrelationVectorVersion.V2;
-            }
-            else
-            {
-                //By default not reporting error, just return V1
-                return CorrelationVectorVersion.V1;
-            }
+            return Guid.NewGuid().GetBaseFromGuid();
         }
 
         private static bool IsImmutable(string correlationVector)
@@ -339,44 +289,34 @@ namespace Microsoft.CorrelationVector
             return !string.IsNullOrEmpty(correlationVector) && correlationVector.EndsWith(CorrelationVectorV2.TerminationSign);
         }
 
-        private static bool IsOversized(string baseVector, int extension, CorrelationVectorVersion version)
+        /// <summary>
+        /// Checks if the cV will be too big if an extension is added to the base vector.
+        /// </summary>
+        /// <param name="baseVector"></param>
+        /// <param name="extension"></param>
+        /// <returns>True if new vector will be too large. False if there is no vector or the vector is the appropriate size.</returns>
+        private static bool IsOversized(string baseVector, int extension)
         {
             if (!string.IsNullOrEmpty(baseVector))
             {
                 int size = baseVector.Length + 1 +
                     (extension > 0 ? (int)Math.Log10(extension) : 0) + 1;
-                return ((version == CorrelationVectorVersion.V1 &&
-                      size > CorrelationVectorV2.MaxVectorLength) ||
-                     (version == CorrelationVectorVersion.V2 &&
-                      size > CorrelationVectorV2.MaxVectorLengthV2));
+                return size > MaxVectorLength;
             }
             return false;
         }
 
-        private static void Validate(string correlationVector, CorrelationVectorVersion version)
+        private static void Validate(string correlationVector)
         {
             byte maxVectorLength;
             byte baseLength;
-
-            if (CorrelationVectorVersion.V1 == version)
-            {
-                maxVectorLength = CorrelationVectorV2.MaxVectorLength;
-                baseLength = CorrelationVectorV2.BaseLength;
-            }
-            else if (CorrelationVectorVersion.V2 == version)
-            {
-                maxVectorLength = CorrelationVectorV2.MaxVectorLengthV2;
-                baseLength = CorrelationVectorV2.BaseLengthV2;
-            }
-            else
-            {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Unsupported correlation vector version: {0}", version));
-            }
+            maxVectorLength = CorrelationVectorV2.MaxVectorLength;
+            baseLength = CorrelationVectorV2.BaseLength;
 
             if (string.IsNullOrWhiteSpace(correlationVector) || correlationVector.Length > maxVectorLength)
             {
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                    "The {0} correlation vector can not be null or bigger than {1} characters", version, maxVectorLength));
+                    "The {0} correlation vector can not be null or bigger than {1} characters", CorrelationVectorVersion.V2, maxVectorLength));
             }
 
             string[] parts = correlationVector.Split('.');
@@ -398,7 +338,7 @@ namespace Microsoft.CorrelationVector
 
         public override Tuple<string, string> Reset()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Reset is not supported in Correlation Vector V2");
         }
     }
 }

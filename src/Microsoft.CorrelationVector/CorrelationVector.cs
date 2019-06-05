@@ -55,7 +55,7 @@ namespace Microsoft.CorrelationVector
             {
                 return CorrelationVectorVersion.V1;
             }
-            else if (CorrelationVectorV1.BaseLengthV2 == index)
+            else if (CorrelationVectorV2.BaseLength == index)
             {
                 return CorrelationVectorVersion.V2;
             }
