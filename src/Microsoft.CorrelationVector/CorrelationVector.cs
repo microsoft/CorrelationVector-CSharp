@@ -23,6 +23,11 @@ namespace Microsoft.CorrelationVector
             protected set;
         }
         /// <summary>
+        /// Gets or sets a value indicating whether or not to validate the correlation
+        /// vector on creation.
+        /// </summary>
+        public static bool ValidateCorrelationVectorDuringCreation { get; set; }
+        /// <summary>
         /// This is the maximum vector length before it has to be reset or terminated.
         /// </summary>
         internal const byte MaxVectorLength = 127;
@@ -87,7 +92,7 @@ namespace Microsoft.CorrelationVector
         public static CorrelationVector Spin(string correlationVector)
         {
             CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
-            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Spin, CorrelationVectorV2.Spin);
+            return RunStaticMethod(correlationVector, version, NotHandledMethod, CorrelationVectorV2.Spin);
         }
         public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
         {
@@ -95,7 +100,7 @@ namespace Microsoft.CorrelationVector
             switch (version)
             {
                 case CorrelationVectorVersion.V1:
-                    return CorrelationVectorV1.Spin(correlationVector, parameters);
+                    return NotHandledMethod(correlationVector);
                 case CorrelationVectorVersion.V2:
                     return CorrelationVectorV2.Spin(correlationVector, parameters);
                 default:
@@ -103,17 +108,31 @@ namespace Microsoft.CorrelationVector
             }
         }
 
-        private static CorrelationVector RunStaticMethod(string correlationVector, CorrelationVectorVersion v, Func<string, CorrelationVector> f1, Func<string, CorrelationVector> f2)
+        /// <summary>
+        /// Helper method to run method based on version.
+        /// </summary>
+        /// <param name="correlationVector">String representation of your cV</param>
+        /// <param name="v">Correlation Vector version.</param>
+        /// <param name="functions">The parameters for each cV version. Versions are in order from V1, V2, V3, etc.</param>
+        /// <returns>cV based on cV version.</returns>
+        private static CorrelationVector RunStaticMethod(string correlationVector, CorrelationVectorVersion v, params Func<string, CorrelationVector>[] functions)
         {
-            switch (v)
+            if ((int)v < functions.Length)
             {
-                case CorrelationVectorVersion.V1:
-                    return f1(correlationVector);
-                case CorrelationVectorVersion.V2:
-                    return f2(correlationVector);
-                default:
-                    return null;
+                return functions[(int)v](correlationVector);
             }
+            else
+            {
+                throw new ArgumentException("No function indicated for this version");
+            }
+        }
+
+        /// <summary>
+        /// Run this to throw an exception for non-supported cV methods in RunStaticMethod.
+        /// </summary>
+        private static CorrelationVector NotHandledMethod(string correlationVector)
+        {
+            throw new InvalidOperationException("Method not supported in this version");
         }
 
         public abstract Tuple<string, string> Reset();

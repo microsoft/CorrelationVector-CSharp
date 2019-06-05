@@ -23,16 +23,10 @@ namespace Microsoft.CorrelationVector
         private bool immutable = false;
 
         /// <summary>
-        /// This is termination sign should be used when vector lenght exceeds 
-        /// max allowed length
+        /// This is the termination sign which should be used when vector length exceeds 
+        /// the <see cref="MaxVectorLength"/>
         /// </summary>
         public const string TerminationSign = "!";
-
-        /// <summary>
-        /// Gets or sets a value indicating whether or not to validate the correlation
-        /// vector on creation.
-        /// </summary>
-        public static bool ValidateCorrelationVectorDuringCreation { get; set; }
 
         /// <summary>
         /// Creates a new correlation vector by extending an existing value. This should be
