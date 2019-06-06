@@ -15,12 +15,12 @@ namespace Microsoft.CorrelationVector
         /// </summary>
         /// <param name="guid">The <see cref="Guid"/> to encode as a vector base.</param>
         /// <returns>The encoded vector base value.</returns>
-        public static string GetBaseFromGuid(this Guid guid)
+        public static string GetBaseFromGuid(this Guid guid, int baseLength)
         {
             byte[] bytes = guid.ToByteArray();
 
             // Removes the base64 padding
-            return Convert.ToBase64String(bytes).Substring(0, CorrelationVectorV2.BaseLength);
+            return Convert.ToBase64String(bytes).Substring(0, baseLength);
         }
 
         /// <summary>

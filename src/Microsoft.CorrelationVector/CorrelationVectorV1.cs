@@ -126,7 +126,7 @@ namespace Microsoft.CorrelationVector
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
         public CorrelationVectorV1(Guid vectorBase)
-            : this(vectorBase.GetBaseFromGuid(), 0, false)
+            : this(vectorBase.GetBaseFromGuid(BaseLength), 0, false)
         {
         }
 

@@ -40,6 +40,18 @@ namespace Microsoft.CorrelationVector.UnitTests
             var splitVector = correlationVector.Value.Split('.');
 
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
+            Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 22 character long");
+            Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
+        }
+
+        [TestMethod]
+        public void CreateCorrelationVectorFromGuidTestV2()
+        {
+            var guid = System.Guid.NewGuid();
+            var correlationVector = new CorrelationVectorV2(guid);
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
             Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 character long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
         }

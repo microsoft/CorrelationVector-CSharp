@@ -173,7 +173,7 @@ namespace Microsoft.CorrelationVector
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
         public CorrelationVectorV2(Guid vectorBase)
-            : this(vectorBase.GetBaseFromGuid(), 0, false)
+            : this(vectorBase.GetBaseFromGuid(BaseLength), 0, false)
         {
         }
 
@@ -275,7 +275,7 @@ namespace Microsoft.CorrelationVector
 
         private static string GetUniqueValue()
         {
-            return Guid.NewGuid().GetBaseFromGuid();
+            return Guid.NewGuid().GetBaseFromGuid(BaseLength);
         }
 
         private static bool IsImmutable(string correlationVector)
