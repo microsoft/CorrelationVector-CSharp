@@ -23,7 +23,8 @@ namespace Microsoft.CorrelationVector
 
         protected const string HeaderName = "MS-CV";
 
-        public CorrelationVectorVersion Version {
+        public CorrelationVectorVersion Version
+        {
             get;
             protected set;
         }
@@ -50,7 +51,8 @@ namespace Microsoft.CorrelationVector
         /// True if the specified correlation vector is equal to the current correlation
         /// vector; otherwise, false.
         /// </returns>
-        public bool Equals(ICorrelationVector vector) {
+        public bool Equals(ICorrelationVector vector)
+        {
             return string.Equals(this.Value, vector.Value, StringComparison.Ordinal);
         }
 
