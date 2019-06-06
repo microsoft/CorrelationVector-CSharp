@@ -86,27 +86,32 @@ namespace Microsoft.CorrelationVector
         /// <returns>The Correlation Vector based on its version.</returns>
         public static CorrelationVector Parse(string correlationVector)
         {
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
+            CorrelationVectorVersion version = InferVersion(correlationVector);
             return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Parse, CorrelationVectorV2.Parse);
 
         }
 
         public static CorrelationVector Extend(string correlationVector)
         {
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
+            CorrelationVectorVersion version = InferVersion(correlationVector);
             return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Extend, CorrelationVectorV2.Extend);
 
         }
 
         public static CorrelationVector Spin(string correlationVector)
         {
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
-            return RunStaticMethod(correlationVector, version, NotHandledMethod, CorrelationVectorV2.Spin);
+            SpinParameters defaultParameters = new SpinParameters
+            {
+                Interval = SpinCounterInterval.Coarse,
+                Periodicity = SpinCounterPeriodicity.Short,
+                Entropy = SpinEntropy.Two
+            };
+            return Spin(correlationVector, defaultParameters);
         }
 
         public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
         {
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(correlationVector);
+            CorrelationVectorVersion version = InferVersion(correlationVector);
             switch (version)
             {
                 case CorrelationVectorVersion.V1:

@@ -88,16 +88,16 @@ namespace Microsoft.CorrelationVector.UnitTests
             {
                 var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
 
-                CorrelationVectorV2.ValidateCorrelationVectorDuringCreation = false;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
                 Guid baseAsGuid = correlationVector.GetBaseAsGuid();
                 Assert.AreEqual(vectorBaseGuid, baseAsGuid, "Correlation Vector base as a guid should be the same as the expected guid");
 
-                CorrelationVectorV2.ValidateCorrelationVectorDuringCreation = true;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
                 Assert.ThrowsException<InvalidOperationException>(() => correlationVector.GetBaseAsGuid());
             }
             finally
             {
-                CorrelationVectorV2.ValidateCorrelationVectorDuringCreation = false;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             }
         }
 
@@ -167,12 +167,12 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void SimpleExtendCorrelationVectorTest()
         {
-            var correlationVector = new CorrelationVectorV1();
+            CorrelationVector correlationVector = new CorrelationVectorV1();
             var splitVector = correlationVector.Value.Split('.');
             var vectorBase = splitVector[0];
             var extension = splitVector[1];
 
-            correlationVector = CorrelationVectorV1.Extend(correlationVector.Value);
+            correlationVector = CorrelationVector.Extend(correlationVector.Value);
             splitVector = correlationVector.Value.Split('.');
 
             Assert.AreEqual(3, splitVector.Length, "Correlation Vector should contain 3 components separated by a '.' after extension");
@@ -184,7 +184,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void ValidateCreationTest()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
             var correlationVector = new CorrelationVectorV1();
             correlationVector.Increment();
             var splitVector = correlationVector.Value.Split('.');
@@ -194,14 +194,14 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void ExtendNullCorrelationVector()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = false;
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             // This shouldn't throw since we skip validation
-            var vector = CorrelationVectorV1.Extend(null);
+            var vector = CorrelationVector.Extend(null);
             Assert.IsTrue(vector.ToString() == ".0");
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
-                vector = CorrelationVectorV1.Extend(null);
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
+                vector = CorrelationVector.Extend(null);
                 Assert.IsTrue(vector.ToString() == ".0");
             }
             );
@@ -210,27 +210,27 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void ThrowWithInsufficientCharsCorrelationVectorValue()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = false;
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             // This shouldn't throw since we skip validation
-            var vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mO.1");
+            var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mO.1");
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
-                vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mO.1");
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
+                vector = CorrelationVector.Extend("tul4NUsfs9Cl7mO.1");
             });
         }
 
         [TestMethod]
         public void ThrowWithTooManyCharsCorrelationVectorValue()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = false;
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             // This shouldn't throw since we skip validation
-            var vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mOfN/dupsl.1");
+            var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOfN/dupsl.1");
 
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
-                vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mOfN/dupsl.1");
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
+                vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOfN/dupsl.1");
             });
         }
 
@@ -239,9 +239,9 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
                 /* Bigger than 63 chars */
-                var vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.2147483647.2147483647");
+                var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.2147483647.2147483647");
             });
         }
 
@@ -250,9 +250,9 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
                 /* Bigger than 127 chars */
-                var vector = CorrelationVectorV2.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647");
+                var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647");
             });
         }
 
@@ -261,17 +261,17 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             Assert.ThrowsException<ArgumentException>(() =>
             {
-                CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = true;
+                CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
                 /* Bigger than INT32 */
-                var vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mOf.11111111111111111111111111111");
+                var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.11111111111111111111111111111");
             });
         }
 
         [TestMethod]
         public void IncrementPastMaxWithNoErrors()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVectorV1.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479");
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Extend("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479");
             vector.Increment();
             Assert.AreEqual("tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.1", vector.Value);
 
@@ -287,8 +287,8 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void IncrementPastMaxWithNoErrorsV2()
         {
-            CorrelationVectorV1.ValidateCorrelationVectorDuringCreation = false;
-            var vector = CorrelationVectorV2.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            var vector = CorrelationVector.Extend("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214");
             vector.Increment();
             Assert.AreEqual("KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.1", vector.Value);
 
@@ -317,7 +317,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             for (int i = 0; i < 100; i++)
             {
                 // The cV after a Spin will look like <cvBase>.0.<spinValue>.0, so the spinValue is at index = 2.
-                var spinValue = uint.Parse(CorrelationVectorV2.Spin(vector.Value, spinParameters).Value.Split('.')[2]);
+                var spinValue = uint.Parse(CorrelationVector.Spin(vector.Value, spinParameters).Value.Split('.')[2]);
 
                 // Count the number of times the counter wraps.
                 if (spinValue <= lastSpinValue)
@@ -342,8 +342,8 @@ namespace Microsoft.CorrelationVector.UnitTests
             const string baseVector = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214";
 
             // we hit 127 chars limit, will append "!" to vector
-            var vector = CorrelationVectorV2.Spin(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV1.TerminationSign), vector.Value);
+            var vector = CorrelationVector.Spin(baseVector);
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -353,7 +353,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             const string baseVector = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.214748364.23";
 
             // we hit 63 chars limit, will append "!" to vector
-            var vector = CorrelationVectorV1.Extend(baseVector);
+            var vector = CorrelationVector.Extend(baseVector);
             Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV1.TerminationSign), vector.Value);
         }
 
@@ -364,7 +364,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             const string baseVector = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2141";
 
             // we hit 127 chars limit, will append "!" to vector
-            var vector = CorrelationVectorV2.Extend(baseVector);
+            var vector = CorrelationVector.Extend(baseVector);
             Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV1.TerminationSign), vector.Value);
         }
 
@@ -374,11 +374,11 @@ namespace Microsoft.CorrelationVector.UnitTests
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             const string cv = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.21474836479.0!";
 
-            var vector = CorrelationVectorV1.Extend(cv);
+            var vector = CorrelationVector.Extend(cv);
             //extend do nothing
             Assert.AreEqual(cv, vector.Value);
 
-            Assert.ThrowsException<InvalidOperationException>(() => CorrelationVectorV1.Spin(cv));
+            Assert.ThrowsException<InvalidOperationException>(() => CorrelationVector.Spin(cv));
 
             vector.Increment();
             // Increment does nothing since it has termination sign
@@ -390,11 +390,11 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
             const string cv = "KZY+dsX2jEaZesgCPjJ2Ng.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.2147483647.214.0!";
-            var vector = CorrelationVectorV2.Extend(cv);
+            var vector = CorrelationVector.Extend(cv);
             //extend do nothing
             Assert.AreEqual(cv, vector.Value);
 
-            vector = CorrelationVectorV2.Spin(cv);
+            vector = CorrelationVector.Spin(cv);
             //Spin do nothing
             Assert.AreEqual(cv, vector.Value);
 
