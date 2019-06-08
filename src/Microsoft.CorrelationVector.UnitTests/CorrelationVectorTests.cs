@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -153,6 +154,33 @@ namespace Microsoft.CorrelationVector.UnitTests
             Assert.AreEqual("3", splitVector[1], "Correlation Vector extension was not parsed properly");
             Assert.AreEqual("4", splitVector[2], "Correlation Vector extension was not parsed properly");
             Assert.AreEqual("5", splitVector[3], "Correlation Vector extension was not parsed properly");
+        }
+
+        [TestMethod]
+        public void ParseCorrelationVectorV3Test()
+        {
+            var correlationVector = CorrelationVector.Parse("A.Y58xO9ov0kmpPvkiuzMUVA.3.4.A");
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(CorrelationVectorVersion.V3, correlationVector.Version, "Correlation Vector version should be V3");
+            Assert.AreEqual(5, splitVector.Length, "Correlation Vector was not parsed properly");
+            Assert.AreEqual("Y58xO9ov0kmpPvkiuzMUVA", correlationVector.Base, "Correlation Vector base was not parsed properly");
+            Assert.AreEqual("3", splitVector[2], "Correlation Vector extension was not parsed properly");
+            Assert.AreEqual("4", splitVector[3], "Correlation Vector extension was not parsed properly");
+            Assert.AreEqual(10, correlationVector.Extension, "Correlation Vector extension was not parsed properly");
+        }
+
+        [TestMethod]
+        public void ParseCorrelationVectorV3Test2()
+        {
+            var correlationVector = CorrelationVector.Parse("A.Y58xO9ov0kmpPvkiuzMUVA");
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(CorrelationVectorVersion.V3, correlationVector.Version, "Correlation Vector version should be V3");
+            Assert.AreEqual("Y58xO9ov0kmpPvkiuzMUVA", correlationVector.Base, "Correlation Vector base was not parsed properly");
+            Assert.AreEqual("3", splitVector[2], "Correlation Vector extension was not parsed properly");
+            Assert.AreEqual("4", splitVector[3], "Correlation Vector extension was not parsed properly");
+            Assert.AreEqual(10, correlationVector.Extension, "Correlation Vector extension was not parsed properly");
         }
 
         [TestMethod]
@@ -317,6 +345,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             for (int i = 0; i < 100; i++)
             {
                 // The cV after a Spin will look like <cvBase>.0.<spinValue>.0, so the spinValue is at index = 2.
+                CorrelationVector newVector = CorrelationVector.Spin(vector.Value, spinParameters);
                 var spinValue = uint.Parse(CorrelationVector.Spin(vector.Value, spinParameters).Value.Split('.')[2]);
 
                 // Count the number of times the counter wraps.
@@ -333,6 +362,52 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // The counter should wrap at most 1 time.
             Assert.IsTrue(wrappedCounter <= 1);
+        }
+
+        [TestMethod]
+        public void SpinSortValidationV3()
+        {
+            var vector = new CorrelationVectorV3();
+            var spinParameters = new SpinParameters
+            {
+                Entropy = SpinEntropy.Four,
+                Interval = SpinCounterInterval.Fine,
+                Periodicity = SpinCounterPeriodicity.Long
+            };
+
+            uint lastSpinValue = 0;
+            var wrappedCounter = 0;
+            for (int i = 0; i < 100; i++)
+            {
+                // The cV after a Spin will look like <cvBase>.0_<spinValue>.0, so the spinValue is at index = 2.
+                CorrelationVector newVector = CorrelationVectorV3.Spin(vector.Value, spinParameters);
+                var spinValue = uint.Parse(newVector.Value.Split('.', '_')[2], System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+
+                // Count the number of times the counter wraps.
+                if (spinValue <= lastSpinValue)
+                {
+                    wrappedCounter++;
+                }
+
+                lastSpinValue = spinValue;
+
+                // Wait for 10ms.
+                Task.Delay(10).Wait();
+            }
+
+            // The counter should wrap at most 1 time.
+            Assert.IsTrue(wrappedCounter <= 1);
+        }
+
+        [TestMethod]
+        public void TestResetV3()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string baseVector = "A.KZY+dsX2jEaZesgCPjJ2Ng.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.FFF";
+
+            // we hit 127 chars limit, will reset vector
+            var vector = CorrelationVector.Parse(baseVector);
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
         }
 
         [TestMethod]

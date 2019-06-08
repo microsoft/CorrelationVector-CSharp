@@ -74,6 +74,19 @@ namespace Microsoft.CorrelationVector
             {
                 return CorrelationVectorVersion.V2;
             }
+            else if (index == 1)
+            {
+                // cV version indicated by starting single letter for V3 and after
+                if (correlationVector.Substring(0, index) == "A")
+                {
+                    return CorrelationVectorVersion.V3;
+                }
+                else
+                {
+                    //By default not reporting error, just return V1
+                    return CorrelationVectorVersion.V1;
+                }
+            }
             else
             {
                 //By default not reporting error, just return V1
@@ -89,7 +102,7 @@ namespace Microsoft.CorrelationVector
         public static CorrelationVector Parse(string correlationVector)
         {
             CorrelationVectorVersion version = InferVersion(correlationVector);
-            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Parse, CorrelationVectorV2.Parse);
+            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Parse, CorrelationVectorV2.Parse, CorrelationVectorV3.Parse);
 
         }
 
