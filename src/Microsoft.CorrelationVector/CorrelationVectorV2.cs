@@ -65,26 +65,6 @@ namespace Microsoft.CorrelationVector
         /// <param name="correlationVector">
         /// Taken from the message header indicated by <see cref="HeaderName"/>.
         /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public new static CorrelationVectorV2 Spin(string correlationVector)
-        {
-            SpinParameters defaultParameters = new SpinParameters
-            {
-                Interval = SpinCounterInterval.Coarse,
-                Periodicity = SpinCounterPeriodicity.Short,
-                Entropy = SpinEntropy.Two
-            };
-
-            return CorrelationVectorV2.Spin(correlationVector, defaultParameters);
-        }
-
-        /// <summary>
-        /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
         /// <param name="parameters">
         /// The parameters to use when applying the Spin operator.
         /// </param>
