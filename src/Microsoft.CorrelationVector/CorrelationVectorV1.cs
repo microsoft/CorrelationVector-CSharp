@@ -62,18 +62,6 @@ namespace Microsoft.CorrelationVector
         /// <param name="correlationVector">
         /// Taken from the message header indicated by <see cref="HeaderName"/>.
         /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public new static CorrelationVectorV1 Spin(string correlationVector)
-        {
-            throw new InvalidOperationException("Spin is not supported in Correlation Vector V1");
-        }
-
-        /// <summary>
-        /// Not supported in V1.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
         /// <param name="parameters">
         /// The parameters to use when applying the Spin operator.
         /// </param>
