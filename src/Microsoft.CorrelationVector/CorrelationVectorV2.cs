@@ -8,9 +8,8 @@ using System.Globalization;
 namespace Microsoft.CorrelationVector
 {
     /// <summary>
-    /// This class represents a lightweight vector for identifying and measuring
+    /// This class represents version 2 of the cV, a lightweight vector for identifying and measuring
     /// causality.
-    /// This is version 2 of the cV, which is longer and can utilize the Spin operations.
     /// </summary>
     public sealed class CorrelationVectorV2 : CorrelationVector
     {
