@@ -1,42 +1,33 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
-using System;
-using System.Threading;
-using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.CorrelationVector
 {
     /// <summary>
-    /// This class represents a lightweight vector for identifying and measuring
-    /// causality.
+    /// This interface represents the abstract class from which Correlation Vectors are derived.
+    /// Not to be confused with the cV Base, which is the string that represents the base of the vector.
     /// </summary>
-    public sealed class CorrelationVector
+    public abstract class CorrelationVector : ICorrelationVector
     {
-        internal const byte MaxVectorLength = 63;
-        internal const byte MaxVectorLengthV2 = 127;
-        internal const byte BaseLength = 16;
-        internal const byte BaseLengthV2 = 22;
+        protected CorrelationVector()
+        {
 
-        internal readonly string BaseVector = null;
+        }
 
-        private int extension = 0;
+        public abstract string Value { get; }
 
-        private bool immutable = false;
+        public abstract string Base { get; }
 
-        private static Random rng = new Random();
+        public abstract int Extension { get; }
 
-        /// <summary>
-        /// This is the header that should be used between services to pass the correlation
-        /// vector.
-        /// </summary>
-        public const string HeaderName = "MS-CV";
+        protected const string HeaderName = "MS-CV";
 
-        /// <summary>
-        /// This is termination sign should be used when vector lenght exceeds 
-        /// max allowed length
-        /// </summary>
-        public const string TerminationSign = "!";
+        public CorrelationVectorVersion Version
+        {
+            get;
+            protected set;
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not to validate the correlation
@@ -45,235 +36,12 @@ namespace Microsoft.CorrelationVector
         public static bool ValidateCorrelationVectorDuringCreation { get; set; }
 
         /// <summary>
-        /// Creates a new correlation vector by extending an existing value. This should be
-        /// done at the entry point of an operation.
+        /// This is the maximum vector length before it has to be reset or terminated.
         /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public static CorrelationVector Extend(string correlationVector)
-        {
-            if (CorrelationVector.IsImmutable(correlationVector))
-            {
-                return CorrelationVector.Parse(correlationVector);
-            }
-
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(
-                correlationVector, CorrelationVector.ValidateCorrelationVectorDuringCreation);
-
-            if (CorrelationVector.ValidateCorrelationVectorDuringCreation)
-            {
-                CorrelationVector.Validate(correlationVector, version);
-            }
-
-            if (CorrelationVector.IsOversized(correlationVector, 0, version))
-            {
-                return CorrelationVector.Parse(correlationVector + CorrelationVector.TerminationSign);
-            }
-
-            return new CorrelationVector(correlationVector, 0, version, false);
-        }
+        internal const byte MaxVectorLength = 127;
 
         /// <summary>
-        /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public static CorrelationVector Spin(string correlationVector)
-        {
-            SpinParameters defaultParameters = new SpinParameters
-            {
-                Interval = SpinCounterInterval.Coarse,
-                Periodicity = SpinCounterPeriodicity.Short,
-                Entropy = SpinEntropy.Two
-            };
-
-            return CorrelationVector.Spin(correlationVector, defaultParameters);
-        }
-
-        /// <summary>
-        /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
-        /// <param name="parameters">
-        /// The parameters to use when applying the Spin operator.
-        /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
-        {
-            if (CorrelationVector.IsImmutable(correlationVector))
-            {
-                return CorrelationVector.Parse(correlationVector);
-            }
-
-            CorrelationVectorVersion version = CorrelationVector.InferVersion(
-                correlationVector, CorrelationVector.ValidateCorrelationVectorDuringCreation);
-
-            if (CorrelationVector.ValidateCorrelationVectorDuringCreation)
-            {
-                CorrelationVector.Validate(correlationVector, version);
-            }
-
-            byte[] entropy = new byte[parameters.EntropyBytes];
-            rng.NextBytes(entropy);
-
-            ulong value = (ulong)(DateTime.UtcNow.Ticks >> parameters.TicksBitsToDrop);
-            for (int i = 0; i < parameters.EntropyBytes; i++)
-            {
-                value = (value << 8) | Convert.ToUInt64(entropy[i]);
-            }
-
-            // Generate a bitmask and mask the lower TotalBits in the value.
-            // The mask is generated by (1 << TotalBits) - 1. We need to handle the edge case
-            // when shifting 64 bits, as it wraps around.
-            value &= (parameters.TotalBits == 64 ? 0 : (ulong)1 << parameters.TotalBits) - 1;
-
-            string s = unchecked((uint)value).ToString();
-            if (parameters.TotalBits > 32)
-            {
-                s = string.Concat((value >> 32).ToString(), ".", s);
-            }
-
-            string baseVector = string.Concat(correlationVector, ".", s);
-            if (CorrelationVector.IsOversized(baseVector, 0, version))
-            {
-                return CorrelationVector.Parse(correlationVector + CorrelationVector.TerminationSign);
-            }
-
-            return new CorrelationVector(baseVector, 0, version, false);
-        }
-
-        /// <summary>
-        /// Creates a new correlation vector by parsing its string representation
-        /// </summary>
-        /// <param name="correlationVector">correlationVector</param>
-        /// <returns>CorrelationVector</returns>
-        public static CorrelationVector Parse(string correlationVector)
-        {
-            if (!string.IsNullOrEmpty(correlationVector))
-            {
-                int p = correlationVector.LastIndexOf('.');
-                bool immutable = CorrelationVector.IsImmutable(correlationVector);
-                if (p > 0)
-                {
-                    string extensionValue = immutable ? correlationVector.Substring(p + 1, correlationVector.Length - p - 1 - CorrelationVector.TerminationSign.Length)
-                        : correlationVector.Substring(p + 1);
-                    int extension;
-                    if (int.TryParse(extensionValue, out extension) && extension >= 0)
-                    {
-                        return new CorrelationVector(correlationVector.Substring(0, p), extension, CorrelationVector.InferVersion(correlationVector, false), immutable);
-                    }
-                }
-            }
-
-            return new CorrelationVector();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVector"/> class. This
-        /// should only be called when no correlation vector was found in the message
-        /// header.
-        /// </summary>
-        public CorrelationVector()
-            : this(CorrelationVectorVersion.V1)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVector"/> class of the
-        /// given implemenation version. This should only be called when no correlation
-        /// vector was found in the message header.
-        /// </summary>
-        /// <param name="version">The correlation vector implemenation version.</param>
-        public CorrelationVector(CorrelationVectorVersion version)
-            : this(CorrelationVector.GetUniqueValue(version), 0, version, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVector"/> class of the
-        /// V2 implemenation using the given <see cref="System.Guid"/> as the vector base.
-        /// </summary>
-        /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
-        /// vector base.</param>
-        public CorrelationVector(Guid vectorBase)
-            : this(vectorBase.GetBaseFromGuid(), 0, CorrelationVectorVersion.V2, false)
-        {
-        }
-
-        /// <summary>
-        /// Gets the value of the correlation vector as a string.
-        /// </summary>
-        public string Value
-        {
-            get
-            {
-                return string.Concat(this.BaseVector, ".", this.extension,
-                    this.immutable ? CorrelationVector.TerminationSign : string.Empty);
-            }
-        }
-
-        /// <summary>
-        /// Increments the current extension by one. Do this before passing the value to an
-        /// outbound message header.
-        /// </summary>
-        /// <returns>
-        /// The new value as a string that you can add to the outbound message header
-        /// indicated by <see cref="HeaderName"/>.
-        /// </returns>
-        public string Increment()
-        {
-            if (this.immutable)
-            {
-                return this.Value;
-            }
-            int snapshot = 0;
-            int next = 0;
-            do
-            {
-                snapshot = this.extension;
-                if (snapshot == int.MaxValue)
-                {
-                    return this.Value;
-                }
-                next = snapshot + 1;
-                if (CorrelationVector.IsOversized(this.BaseVector, next, this.Version))
-                {
-                    this.immutable = true;
-                    return this.Value;
-                }
-            }
-            while (snapshot != Interlocked.CompareExchange(ref this.extension, next, snapshot));
-            return string.Concat(this.BaseVector, ".", next);
-        }
-
-        /// <summary>
-        /// Gets the version of the correlation vector implementation.
-        /// </summary>
-        public CorrelationVectorVersion Version
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Returns a string that represents the current object.
-        /// </summary>
-        /// <returns>A string that represents the current object.</returns>
-        public override string ToString()
-        {
-            return this.Value;
-        }
-
-        /// <summary>
-        /// Determines whether two instances of the <see cref="CorrelationVector"/> class
+        /// Determines whether two instances of the <see cref="ICorrelationVector"/> class
         /// are equal. 
         /// </summary>
         /// <param name="vector">
@@ -283,45 +51,26 @@ namespace Microsoft.CorrelationVector
         /// True if the specified correlation vector is equal to the current correlation
         /// vector; otherwise, false.
         /// </returns>
-        public bool Equals(CorrelationVector vector)
+        public bool Equals(ICorrelationVector vector)
         {
             return string.Equals(this.Value, vector.Value, StringComparison.Ordinal);
         }
 
-        private CorrelationVector(string baseVector, int extension, CorrelationVectorVersion version, bool immutable)
-        {
-            this.BaseVector = baseVector;
-            this.extension = extension;
-            this.Version = version;
-            this.immutable = immutable || CorrelationVector.IsOversized(baseVector, extension, version);
-        }
-
-        private static string GetUniqueValue(CorrelationVectorVersion version)
-        {
-            if (CorrelationVectorVersion.V1 == version)
-            {
-                byte[] bytes = Guid.NewGuid().ToByteArray();
-                return Convert.ToBase64String(bytes, 0, 12);
-            }
-            else if (CorrelationVectorVersion.V2 == version)
-            {
-                return Guid.NewGuid().GetBaseFromGuid();
-            }
-            else
-            {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Unsupported correlation vector version: {0}", version));
-            }
-        }
-
-        private static CorrelationVectorVersion InferVersion(string correlationVector, bool reportErrors)
+        /// <summary>
+        /// Identifies which version of the Correlation Vector is being used.
+        /// </summary>
+        /// <returns>
+        /// An enumerator indicating correlation vector version.
+        /// </returns>
+        private static CorrelationVectorVersion InferVersion(string correlationVector)
         {
             int index = correlationVector == null ? -1 : correlationVector.IndexOf('.');
 
-            if (CorrelationVector.BaseLength == index)
+            if (CorrelationVectorV1.BaseLength == index)
             {
                 return CorrelationVectorVersion.V1;
             }
-            else if (CorrelationVector.BaseLengthV2 == index)
+            else if (CorrelationVectorV2.BaseLength == index)
             {
                 return CorrelationVectorVersion.V2;
             }
@@ -332,66 +81,70 @@ namespace Microsoft.CorrelationVector
             }
         }
 
-        private static bool IsImmutable(string correlationVector)
+        /// <summary>
+        /// Converts a string representation of a Correlation Vector into this class.
+        /// </summary>
+        /// <param name="correlationVector">String representation</param>
+        /// <returns>The Correlation Vector based on its version.</returns>
+        public static CorrelationVector Parse(string correlationVector)
         {
-            return !string.IsNullOrEmpty(correlationVector) && correlationVector.EndsWith(CorrelationVector.TerminationSign);
+            CorrelationVectorVersion version = InferVersion(correlationVector);
+            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Parse, CorrelationVectorV2.Parse);
+
         }
 
-        private static bool IsOversized(string baseVector, int extension, CorrelationVectorVersion version)
+        public static CorrelationVector Extend(string correlationVector)
         {
-            if (!string.IsNullOrEmpty(baseVector))
-            {
-                int size = baseVector.Length + 1 +
-                    (extension > 0 ? (int)Math.Log10(extension) : 0) + 1;
-                return ((version == CorrelationVectorVersion.V1 &&
-                      size > CorrelationVector.MaxVectorLength) ||
-                     (version == CorrelationVectorVersion.V2 &&
-                      size > CorrelationVector.MaxVectorLengthV2));
-            }
-            return false;
+            CorrelationVectorVersion version = InferVersion(correlationVector);
+            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Extend, CorrelationVectorV2.Extend); 
         }
 
-        private static void Validate(string correlationVector, CorrelationVectorVersion version)
+        public static CorrelationVector Spin(string correlationVector)
         {
-            byte maxVectorLength;
-            byte baseLength;
+            SpinParameters defaultParameters = new SpinParameters
+            {
+                Interval = SpinCounterInterval.Coarse,
+                Periodicity = SpinCounterPeriodicity.Short,
+                Entropy = SpinEntropy.Two
+            };
+            return Spin(correlationVector, defaultParameters);
+        }
 
-            if (CorrelationVectorVersion.V1 == version)
+        public static CorrelationVector Spin(string correlationVector, SpinParameters parameters)
+        {
+            CorrelationVectorVersion version = InferVersion(correlationVector);
+            switch (version)
             {
-                maxVectorLength = CorrelationVector.MaxVectorLength;
-                baseLength = CorrelationVector.BaseLength;
+                case CorrelationVectorVersion.V1:
+                    return CorrelationVectorV1.Spin(correlationVector, parameters);
+                case CorrelationVectorVersion.V2:
+                    return CorrelationVectorV2.Spin(correlationVector, parameters);
+                default:
+                    return null;
             }
-            else if (CorrelationVectorVersion.V2 == version)
+        }
+
+        /// <summary>
+        /// Helper method to run method based on version.
+        /// </summary>
+        /// <param name="correlationVector">String representation of your cV</param>
+        /// <param name="v">Correlation Vector version.</param>
+        /// <param name="functions">The parameters for each cV version. Versions are in order from V1, V2, V3, etc.</param>
+        /// <returns>cV based on cV version.</returns>
+        private static CorrelationVector RunStaticMethod(string correlationVector, CorrelationVectorVersion v, params Func<string, CorrelationVector>[] functions)
+        {
+            if ((int)v < functions.Length)
             {
-                maxVectorLength = CorrelationVector.MaxVectorLengthV2;
-                baseLength = CorrelationVector.BaseLengthV2;
+                return functions[(int)v](correlationVector);
             }
             else
             {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Unsupported correlation vector version: {0}", version));
-            }
-
-            if (string.IsNullOrWhiteSpace(correlationVector) || correlationVector.Length > maxVectorLength)
-            {
-                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
-                    "The {0} correlation vector can not be null or bigger than {1} characters", version, maxVectorLength));
-            }
-
-            string[] parts = correlationVector.Split('.');
-
-            if (parts.Length < 2 || parts[0].Length != baseLength)
-            {
-                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Invalid correlation vector {0}. Invalid base value {1}", correlationVector, parts[0]));
-            }
-
-            for (int i = 1; i < parts.Length; i++)
-            {
-                int result;
-                if (int.TryParse(parts[i], out result) == false || result < 0)
-                {
-                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Invalid correlation vector {0}. Invalid extension value {1}", correlationVector, parts[i]));
-                }
+                throw new ArgumentException("No function indicated for this version");
             }
         }
+
+        public abstract Tuple<string, string> Reset();
+
+        public abstract string Increment();
     }
 }

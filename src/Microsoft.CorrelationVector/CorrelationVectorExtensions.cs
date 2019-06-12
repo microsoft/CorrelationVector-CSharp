@@ -15,12 +15,12 @@ namespace Microsoft.CorrelationVector
         /// </summary>
         /// <param name="guid">The <see cref="Guid"/> to encode as a vector base.</param>
         /// <returns>The encoded vector base value.</returns>
-        public static string GetBaseFromGuid(this Guid guid)
+        public static string GetBaseFromGuid(this Guid guid, int baseLength)
         {
             byte[] bytes = guid.ToByteArray();
 
             // Removes the base64 padding
-            return Convert.ToBase64String(bytes).Substring(0, CorrelationVector.BaseLengthV2);
+            return Convert.ToBase64String(bytes).Substring(0, baseLength);
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Microsoft.CorrelationVector
                 // Q - 01 0000
                 // g - 10 0000
                 // w - 11 0000
-                char lastChar = correlationVector.BaseVector[CorrelationVector.BaseLengthV2 - 1];
+                char lastChar = correlationVector.Base[CorrelationVectorV2.BaseLength - 1];
 
                 if (lastChar != 'A' && lastChar != 'Q' && lastChar != 'g' && lastChar != 'w')
                 {
@@ -52,7 +52,7 @@ namespace Microsoft.CorrelationVector
                 }
             }
 
-            return new Guid(Convert.FromBase64String(correlationVector.BaseVector + "=="));
+            return new Guid(Convert.FromBase64String(correlationVector.Base + "=="));
         }
     }
 }

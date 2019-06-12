@@ -11,35 +11,24 @@ namespace Microsoft.CorrelationVector.UnitTests
     public class CorrelationVectorTests
     {
         [TestMethod]
-        public void SimpleCreateCorrelationVectorTest()
-        {
-            var correlationVector = new CorrelationVector();
-            var splitVector = correlationVector.Value.Split('.');
-
-            Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
-            Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 16 character long");
-            Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
-        }
-
-        [TestMethod]
         public void CreateV1CorrelationVectorTest()
         {
-            var correlationVector = new CorrelationVector(CorrelationVectorVersion.V1);
+            var correlationVector = new CorrelationVectorV1();
             var splitVector = correlationVector.Value.Split('.');
 
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
-            Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 16 character long");
+            Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 16 characters long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
         }
 
         [TestMethod]
         public void CreateV2CorrelationVectorTest()
         {
-            var correlationVector = new CorrelationVector(CorrelationVectorVersion.V2);
+            var correlationVector = new CorrelationVectorV2();
             var splitVector = correlationVector.Value.Split('.');
 
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
-            Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 character long");
+            Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 characters long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
         }
 
@@ -47,18 +36,30 @@ namespace Microsoft.CorrelationVector.UnitTests
         public void CreateCorrelationVectorFromGuidTest()
         {
             var guid = System.Guid.NewGuid();
-            var correlationVector = new CorrelationVector(guid);
+            var correlationVector = new CorrelationVectorV1(guid);
             var splitVector = correlationVector.Value.Split('.');
 
             Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
-            Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 character long");
+            Assert.AreEqual(16, splitVector[0].Length, "Correlation Vector base should be 16 characters long");
+            Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
+        }
+
+        [TestMethod]
+        public void CreateCorrelationVectorFromGuidTestV2()
+        {
+            var guid = System.Guid.NewGuid();
+            var correlationVector = new CorrelationVectorV2(guid);
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(2, splitVector.Length, "Correlation Vector should be created with two components separated by a '.'");
+            Assert.AreEqual(22, splitVector[0].Length, "Correlation Vector base should be 22 characters long");
             Assert.AreEqual("0", splitVector[1], "Correlation Vector extension should start with zero");
         }
 
         [TestMethod]
         public void GetBaseAsGuidV1Test()
         {
-            var correlationVector = new CorrelationVector(CorrelationVectorVersion.V1);
+            var correlationVector = new CorrelationVectorV1();
 
             Assert.ThrowsException<InvalidOperationException>(() => correlationVector.GetBaseAsGuid(),
                 "V1 correlation vector base cannot be converted to a guid");
@@ -68,7 +69,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         public void GetBaseAsGuidV2Test()
         {
             var guid = System.Guid.NewGuid();
-            var correlationVector = new CorrelationVector(guid);
+            var correlationVector = new CorrelationVectorV2(guid);
             Guid baseAsGuid = correlationVector.GetBaseAsGuid();
 
             Assert.AreEqual(guid, baseAsGuid, "Correlation Vector base as a guid should be the same as the initial guid");
@@ -122,7 +123,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             {
                 var correlationVector = CorrelationVector.Parse($"{vectorBase}.0");
                 Guid baseAsGuid = correlationVector.GetBaseAsGuid();
-                var correlationVectorFromGuid = new CorrelationVector(baseAsGuid);
+                var correlationVectorFromGuid = new CorrelationVectorV2(baseAsGuid);
 
                 Assert.AreEqual(correlationVector.Value, correlationVectorFromGuid.Value,
                     $"Correlation vector base -> guid -> correlation vector base should result in the same vector base for {vectorBase}");
@@ -135,6 +136,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             var correlationVector = CorrelationVector.Parse("ifCuqpnwiUimg7Pk.1");
             var splitVector = correlationVector.Value.Split('.');
 
+            Assert.AreEqual(correlationVector.Version, CorrelationVectorVersion.V1, "Correlation Vector version should be V1");
             Assert.AreEqual("ifCuqpnwiUimg7Pk", splitVector[0], "Correlation Vector base was not parsed properly");
             Assert.AreEqual("1", splitVector[1], "Correlation Vector extension was not parsed properly");
         }
@@ -145,6 +147,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             var correlationVector = CorrelationVector.Parse("Y58xO9ov0kmpPvkiuzMUVA.3.4.5");
             var splitVector = correlationVector.Value.Split('.');
 
+            Assert.AreEqual(correlationVector.Version, CorrelationVectorVersion.V2, "Correlation Vector version should be V2");
             Assert.AreEqual(4, splitVector.Length, "Correlation Vector was not parsed properly");
             Assert.AreEqual("Y58xO9ov0kmpPvkiuzMUVA", splitVector[0], "Correlation Vector base was not parsed properly");
             Assert.AreEqual("3", splitVector[1], "Correlation Vector extension was not parsed properly");
@@ -155,7 +158,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void SimpleIncrementCorrelationVectorTest()
         {
-            var correlationVector = new CorrelationVector();
+            var correlationVector = new CorrelationVectorV1();
             correlationVector.Increment();
             var splitVector = correlationVector.Value.Split('.');
             Assert.AreEqual("1", splitVector[1], "Correlation Vector extension should have been incremented by one");
@@ -164,7 +167,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void SimpleExtendCorrelationVectorTest()
         {
-            var correlationVector = new CorrelationVector();
+            CorrelationVector correlationVector = new CorrelationVectorV1();
             var splitVector = correlationVector.Value.Split('.');
             var vectorBase = splitVector[0];
             var extension = splitVector[1];
@@ -182,7 +185,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         public void ValidateCreationTest()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
-            var correlationVector = new CorrelationVector();
+            var correlationVector = new CorrelationVectorV1();
             correlationVector.Increment();
             var splitVector = correlationVector.Value.Split('.');
             Assert.AreEqual("1", splitVector[1], "Correlation Vector extension should have been incremented by one");
@@ -301,7 +304,7 @@ namespace Microsoft.CorrelationVector.UnitTests
         [TestMethod]
         public void SpinSortValidation()
         {
-            var vector = new CorrelationVector();
+            var vector = new CorrelationVectorV2();
             var spinParameters = new SpinParameters
             {
                 Entropy = SpinEntropy.Two,
@@ -333,17 +336,6 @@ namespace Microsoft.CorrelationVector.UnitTests
         }
 
         [TestMethod]
-        public void SpinPastMaxWithTerminationSign()
-        {
-            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
-            const string baseVector = "tul4NUsfs9Cl7mOf.2147483647.2147483647.2147483647.214748364.23";
-
-            // we hit 63 chars limit, will append "!" to vector
-            var vector = CorrelationVector.Spin(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
-        }
-
-        [TestMethod]
         public void SpinPastMaxWithTerminationSignV2()
         {
             CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
@@ -351,7 +343,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Spin(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -362,7 +354,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 63 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV1.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -373,7 +365,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVector.TerminationSign), vector.Value);
+            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
         }
 
         [TestMethod]
@@ -386,12 +378,10 @@ namespace Microsoft.CorrelationVector.UnitTests
             //extend do nothing
             Assert.AreEqual(cv, vector.Value);
 
-            vector = CorrelationVector.Spin(cv);
-            //Spin do nothing
-            Assert.AreEqual(cv, vector.Value);
+            Assert.ThrowsException<InvalidOperationException>(() => CorrelationVector.Spin(cv));
 
             vector.Increment();
-            // Increment do nothing since it has termination sign
+            // Increment does nothing since it has termination sign
             Assert.AreEqual(cv, vector.Value);
         }
 
