@@ -143,14 +143,6 @@ namespace Microsoft.CorrelationVector
             }
         }
 
-        /// <summary>
-        /// Run this to throw an exception for non-supported cV methods in RunStaticMethod.
-        /// </summary>
-        private static CorrelationVector NotHandledMethod(string correlationVector)
-        {
-            throw new InvalidOperationException("Method not supported in this version");
-        }
-
         public abstract Tuple<string, string> Reset();
 
         public abstract string Increment();

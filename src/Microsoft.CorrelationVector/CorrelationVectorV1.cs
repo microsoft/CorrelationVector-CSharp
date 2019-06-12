@@ -10,6 +10,7 @@ namespace Microsoft.CorrelationVector
     /// <summary>
     /// This class represents a lightweight vector for identifying and measuring
     /// causality.
+    /// This is version 1 of the cV, which uses a shorter base length and can only be incremented.
     /// </summary>
     public sealed class CorrelationVectorV1 : CorrelationVector
     {
