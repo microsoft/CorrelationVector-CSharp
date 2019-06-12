@@ -109,8 +109,8 @@ namespace Microsoft.CorrelationVector
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVectorV1"/> class of the
-        /// V2 implemenation using the given <see cref="System.Guid"/> as the vector base.
+        /// Initializes a new instance of the <see cref="CorrelationVectorV1"/> class
+        /// using the given <see cref="System.Guid"/> as the vector base.
         /// </summary>
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
