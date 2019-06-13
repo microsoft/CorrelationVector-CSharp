@@ -8,7 +8,7 @@ using System.Globalization;
 namespace Microsoft.CorrelationVector
 {
     /// <summary>
-    /// This class represents a lightweight vector for identifying and measuring
+    /// This class represents version 1 of the cV, a lightweight vector for identifying and measuring
     /// causality.
     /// </summary>
     public sealed class CorrelationVectorV1 : CorrelationVector
@@ -54,18 +54,6 @@ namespace Microsoft.CorrelationVector
             }
 
             return new CorrelationVectorV1(correlationVector, 0, false);
-        }
-
-        /// <summary>
-        /// Not supported in V1.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public new static CorrelationVectorV1 Spin(string correlationVector)
-        {
-            throw new InvalidOperationException("Spin is not supported in Correlation Vector V1");
         }
 
         /// <summary>
@@ -120,8 +108,8 @@ namespace Microsoft.CorrelationVector
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVectorV1"/> class of the
-        /// V2 implemenation using the given <see cref="System.Guid"/> as the vector base.
+        /// Initializes a new instance of the <see cref="CorrelationVectorV1"/> class
+        /// using the given <see cref="System.Guid"/> as the vector base.
         /// </summary>
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>

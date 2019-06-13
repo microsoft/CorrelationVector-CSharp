@@ -34,7 +34,7 @@ namespace Microsoft.CorrelationVector
                 throw new InvalidOperationException("Cannot convert a V1 correlation vector base to a guid.");
             }
 
-            if (CorrelationVectorV2.ValidateCorrelationVectorDuringCreation)
+            if (CorrelationVector.ValidateCorrelationVectorDuringCreation)
             {
                 // In order to reliably convert a V2 vector base to a guid, the four least significant bits of the last
                 // base64 content-bearing 6-bit block must be zeros.

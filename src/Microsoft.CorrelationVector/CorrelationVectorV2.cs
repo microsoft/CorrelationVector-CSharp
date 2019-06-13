@@ -8,7 +8,7 @@ using System.Globalization;
 namespace Microsoft.CorrelationVector
 {
     /// <summary>
-    /// This class represents a lightweight vector for identifying and measuring
+    /// This class represents version 2 of the cV, a lightweight vector for identifying and measuring
     /// causality.
     /// </summary>
     public sealed class CorrelationVectorV2 : CorrelationVector
@@ -56,26 +56,6 @@ namespace Microsoft.CorrelationVector
             }
 
             return new CorrelationVectorV2(correlationVector, 0, false);
-        }
-
-        /// <summary>
-        /// Creates a new correlation vector by applying the Spin operator to an existing value.
-        /// This should be done at the entry point of an operation.
-        /// </summary>
-        /// <param name="correlationVector">
-        /// Taken from the message header indicated by <see cref="HeaderName"/>.
-        /// </param>
-        /// <returns>A new correlation vector extended from the current vector.</returns>
-        public new static CorrelationVectorV2 Spin(string correlationVector)
-        {
-            SpinParameters defaultParameters = new SpinParameters
-            {
-                Interval = SpinCounterInterval.Coarse,
-                Periodicity = SpinCounterPeriodicity.Short,
-                Entropy = SpinEntropy.Two
-            };
-
-            return CorrelationVectorV2.Spin(correlationVector, defaultParameters);
         }
 
         /// <summary>
@@ -167,8 +147,8 @@ namespace Microsoft.CorrelationVector
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationVectorV2"/> class of the
-        /// V2 implemenation using the given <see cref="System.Guid"/> as the vector base.
+        /// Initializes a new instance of the <see cref="CorrelationVectorV2"/> class
+        /// using the given <see cref="System.Guid"/> as the vector base.
         /// </summary>
         /// <param name="vectorBase">The <see cref="System.Guid"/> to use as a correlation
         /// vector base.</param>
