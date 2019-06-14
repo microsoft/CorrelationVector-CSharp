@@ -178,7 +178,25 @@ namespace Microsoft.CorrelationVector
         /// <returns>CorrelationVector</returns>
         public static CorrelationVectorV3 Span(string traceparent)
         {
-            return new CorrelationVectorV3(traceparent, 0, false, true);
+            // Format: version_format-trace_id-parent_id-trace_flags
+            // We convert the trace_id into a cV base and append the parent_id to it.
+            string[] traceSections = traceparent.Split(SpanDelim);
+            var trace_id = traceSections[1];
+            var parent_id = traceSections[2];
+            var converted_base = ConvertTraceIdToCvBase(trace_id);
+            var converted_parent_id = parent_id.ToUpperInvariant();
+            string newBaseVector = String.Concat(converted_base, SpanDelim, converted_parent_id);
+            return new CorrelationVectorV3(newBaseVector, 0, false, true);
+        }
+
+        private static string ConvertTraceIdToCvBase(string trace_id)
+        {
+            var hexBytes = new byte[trace_id.Length / 2];
+            for (var i = 0; i < hexBytes.Length; i++)
+            {
+                hexBytes[i] = Convert.ToByte(trace_id.Substring(i * 2, 2), 16);
+            }
+            return Convert.ToBase64String(hexBytes).Substring(0, BaseLength);
         }
 
         /// <summary>

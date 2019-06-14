@@ -439,6 +439,7 @@ namespace Microsoft.CorrelationVector.UnitTests
 
             // we hit 127 chars limit, will reset vector
             Tuple<string, string> resetValues = CorrelationVector.Parse(baseVector).Reset();
+            Assert.IsTrue(resetValues.Item1.Contains("#"), "Reset vector must contain reset indicator");
             Assert.AreEqual(baseVector, resetValues.Item2, "The stored vector is different from the base vector.");
         }
 
@@ -509,6 +510,25 @@ namespace Microsoft.CorrelationVector.UnitTests
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
             Assert.IsTrue(vector.Value.Contains("#"), "Reset vector must contain reset indicator");
+        }
+
+        [TestMethod]
+        public void ConvertTraceparentV3()
+        {
+            const string traceparent = "00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01";
+            string[] traceSections = traceparent.Split('-');
+            var vector = CorrelationVectorV3.Span(traceparent);
+
+            var traceIDBytes = new byte[traceSections[1].Length / 2];
+            for (var i = 0; i < traceIDBytes.Length; i++)
+            {
+                traceIDBytes[i] = Convert.ToByte(traceSections[1].Substring(i * 2, 2), 16);
+            }
+            string paddedBase = vector.Base.PadRight(24, '=');
+            byte[] cvBaseBytes = Convert.FromBase64String(paddedBase);
+            Assert.IsTrue(vector.Value.Contains("-"), "Span vector must contain span indicator");
+            Assert.AreEqual(22, vector.Base.Length, "Correlation Vector base should be 22 characters long");
+            CollectionAssert.AreEqual(traceIDBytes, cvBaseBytes, "Trace ID bytes and cV base bytes must be equal");
         }
 
         [TestMethod]
