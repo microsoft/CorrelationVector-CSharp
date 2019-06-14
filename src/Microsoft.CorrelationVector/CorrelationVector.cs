@@ -109,7 +109,7 @@ namespace Microsoft.CorrelationVector
         public static CorrelationVector Extend(string correlationVector)
         {
             CorrelationVectorVersion version = InferVersion(correlationVector);
-            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Extend, CorrelationVectorV2.Extend); 
+            return RunStaticMethod(correlationVector, version, CorrelationVectorV1.Extend, CorrelationVectorV2.Extend, CorrelationVectorV3.Extend); 
         }
 
         public static CorrelationVector Spin(string correlationVector)
@@ -132,6 +132,8 @@ namespace Microsoft.CorrelationVector
                     return CorrelationVectorV1.Spin(correlationVector, parameters);
                 case CorrelationVectorVersion.V2:
                     return CorrelationVectorV2.Spin(correlationVector, parameters);
+                case CorrelationVectorVersion.V3:
+                    return CorrelationVectorV3.Spin(correlationVector, parameters);
                 default:
                     return null;
             }

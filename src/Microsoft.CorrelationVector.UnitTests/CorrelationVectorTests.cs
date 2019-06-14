@@ -34,6 +34,18 @@ namespace Microsoft.CorrelationVector.UnitTests
         }
 
         [TestMethod]
+        public void CreateV3CorrelationVectorTest()
+        {
+            var correlationVector = new CorrelationVectorV3();
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(3, splitVector.Length, "Correlation Vector should be created with three components separated by a '.'");
+            Assert.AreEqual("A", splitVector[0], "Correlation Vector v3 should start with \"A\".");
+            Assert.AreEqual(22, splitVector[1].Length, "Correlation Vector base should be 22 characters long");
+            Assert.AreEqual("0", splitVector[2], "Correlation Vector extension should start with zero");
+        }
+
+        [TestMethod]
         public void CreateCorrelationVectorFromGuidTest()
         {
             var guid = System.Guid.NewGuid();
@@ -58,6 +70,19 @@ namespace Microsoft.CorrelationVector.UnitTests
         }
 
         [TestMethod]
+        public void CreateCorrelationVectorFromGuidTestV3()
+        {
+            var guid = System.Guid.NewGuid();
+            var correlationVector = new CorrelationVectorV3(guid);
+            var splitVector = correlationVector.Value.Split('.');
+
+            Assert.AreEqual(3, splitVector.Length, "Correlation Vector should be created with three components separated by a '.'");
+            Assert.AreEqual("A", splitVector[0], "Correlation Vector v3 should start with \"A\".");
+            Assert.AreEqual(22, splitVector[1].Length, "Correlation Vector base should be 22 characters long");
+            Assert.AreEqual("0", splitVector[2], "Correlation Vector extension should start with zero");
+        }
+
+        [TestMethod]
         public void GetBaseAsGuidV1Test()
         {
             var correlationVector = new CorrelationVectorV1();
@@ -71,6 +96,16 @@ namespace Microsoft.CorrelationVector.UnitTests
         {
             var guid = System.Guid.NewGuid();
             var correlationVector = new CorrelationVectorV2(guid);
+            Guid baseAsGuid = correlationVector.GetBaseAsGuid();
+
+            Assert.AreEqual(guid, baseAsGuid, "Correlation Vector base as a guid should be the same as the initial guid");
+        }
+
+        [TestMethod]
+        public void GetBaseAsGuidV3Test()
+        {
+            var guid = System.Guid.NewGuid();
+            var correlationVector = new CorrelationVectorV3(guid);
             Guid baseAsGuid = correlationVector.GetBaseAsGuid();
 
             Assert.AreEqual(guid, baseAsGuid, "Correlation Vector base as a guid should be the same as the initial guid");
@@ -167,20 +202,7 @@ namespace Microsoft.CorrelationVector.UnitTests
             Assert.AreEqual("Y58xO9ov0kmpPvkiuzMUVA", correlationVector.Base, "Correlation Vector base was not parsed properly");
             Assert.AreEqual("3", splitVector[2], "Correlation Vector extension was not parsed properly");
             Assert.AreEqual("4", splitVector[3], "Correlation Vector extension was not parsed properly");
-            Assert.AreEqual(10, correlationVector.Extension, "Correlation Vector extension was not parsed properly");
-        }
-
-        [TestMethod]
-        public void ParseCorrelationVectorV3Test2()
-        {
-            var correlationVector = CorrelationVector.Parse("A.Y58xO9ov0kmpPvkiuzMUVA");
-            var splitVector = correlationVector.Value.Split('.');
-
-            Assert.AreEqual(CorrelationVectorVersion.V3, correlationVector.Version, "Correlation Vector version should be V3");
-            Assert.AreEqual("Y58xO9ov0kmpPvkiuzMUVA", correlationVector.Base, "Correlation Vector base was not parsed properly");
-            Assert.AreEqual("3", splitVector[2], "Correlation Vector extension was not parsed properly");
-            Assert.AreEqual("4", splitVector[3], "Correlation Vector extension was not parsed properly");
-            Assert.AreEqual(10, correlationVector.Extension, "Correlation Vector extension was not parsed properly");
+            Assert.AreEqual(0xA, correlationVector.Extension, "Correlation Vector extension was not parsed properly");
         }
 
         [TestMethod]
@@ -285,6 +307,15 @@ namespace Microsoft.CorrelationVector.UnitTests
         }
 
         [TestMethod]
+        public void ResetWithTooBigCorrelationVectorValueV3()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = true;
+            /* Bigger than 127 chars */
+            var vector = CorrelationVector.Extend("A.KZY+dsX2jEaZesgCPjJ2Ng.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF");
+            Assert.IsTrue(vector.Value.Contains("#"), "Reset vector must contain reset indicator");
+        }
+
+        [TestMethod]
         public void ThrowWithTooBigExtensionCorrelationVectorValue()
         {
             Assert.ThrowsException<ArgumentException>(() =>
@@ -375,13 +406,14 @@ namespace Microsoft.CorrelationVector.UnitTests
                 Periodicity = SpinCounterPeriodicity.Long
             };
 
-            uint lastSpinValue = 0;
+            ulong lastSpinValue = 0;
             var wrappedCounter = 0;
             for (int i = 0; i < 100; i++)
             {
                 // The cV after a Spin will look like <cvBase>.0_<spinValue>.0, so the spinValue is at index = 2.
                 CorrelationVector newVector = CorrelationVectorV3.Spin(vector.Value, spinParameters);
-                var spinValue = uint.Parse(newVector.Value.Split('.', '_')[2], System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                string hexValue = newVector.Value.Split('.', '_')[3];
+                var spinValue = ulong.Parse(hexValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
 
                 // Count the number of times the counter wraps.
                 if (spinValue <= lastSpinValue)
@@ -406,8 +438,8 @@ namespace Microsoft.CorrelationVector.UnitTests
             const string baseVector = "A.KZY+dsX2jEaZesgCPjJ2Ng.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.FFF";
 
             // we hit 127 chars limit, will reset vector
-            var vector = CorrelationVector.Parse(baseVector);
-            Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
+            Tuple<string, string> resetValues = CorrelationVector.Parse(baseVector).Reset();
+            Assert.AreEqual(baseVector, resetValues.Item2, "The stored vector is different from the base vector.");
         }
 
         [TestMethod]
@@ -419,6 +451,31 @@ namespace Microsoft.CorrelationVector.UnitTests
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Spin(baseVector);
             Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
+        }
+
+        [TestMethod]
+        public void SpinPastMaxWithResetV3()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string baseVector = "A.KZY+dsX2jEaZesgCPjJ2Ng.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF";
+
+            // we hit 127 chars limit, will reset vector and show value
+            var vector = CorrelationVector.Spin(baseVector);
+            Assert.IsTrue(vector.Value.Contains("#"), "Reset vector must contain reset indicator");
+        }
+
+        [TestMethod]
+        public void IncrementPastMaxWithResetV3()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string baseVector = "A.PmvzQKgYek6Sdk/T5sWaqw.1.FA.A1.23_B6A5E62FC38E9974.1_B6A6A13E588CF82F.2A.AB.213_B6A92D24A00C0F9B.47.8B.12.34.A123.2B.23.41.FF";
+
+            var vectorToIncrement = CorrelationVector.Parse(baseVector);
+            // we hit 127 chars limit, will reset vector and show value
+            var incrementedString = vectorToIncrement.Increment();
+            var newVector = CorrelationVector.Parse(incrementedString);
+            Assert.IsTrue(incrementedString.Contains("#"), "Reset vector must contain reset indicator");
+            Assert.AreEqual(0x100, newVector.Extension, "Vector with extension FF should increment to 100");
         }
 
         [TestMethod]
@@ -441,6 +498,17 @@ namespace Microsoft.CorrelationVector.UnitTests
             // we hit 127 chars limit, will append "!" to vector
             var vector = CorrelationVector.Extend(baseVector);
             Assert.AreEqual(string.Concat(baseVector, CorrelationVectorV2.TerminationSign), vector.Value);
+        }
+
+        [TestMethod]
+        public void ExtendPastMaxWithResetV3()
+        {
+            CorrelationVector.ValidateCorrelationVectorDuringCreation = false;
+            const string baseVector = "A.KZY+dsX2jEaZesgCPjJ2Ng.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.7FFFFFFF.FFF";
+
+            // we hit 127 chars limit, will append "!" to vector
+            var vector = CorrelationVector.Extend(baseVector);
+            Assert.IsTrue(vector.Value.Contains("#"), "Reset vector must contain reset indicator");
         }
 
         [TestMethod]
