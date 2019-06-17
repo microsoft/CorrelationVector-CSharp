@@ -36,6 +36,11 @@ namespace Microsoft.CorrelationVector
         /// </summary>
         public const char SpinDelim = '_';
 
+        /// <summary>
+        /// The vector stored in a Reset operation
+        /// </summary>
+        public string StoredVector = null;
+
         private static Random rng = new Random();
 
         /// <summary>
@@ -278,6 +283,8 @@ namespace Microsoft.CorrelationVector
 
             string newVector = String.Concat(VersionChar, StandardDelim, this.Base, ResetDelim, resetValue, StandardDelim, newExtension);
 
+            // Store oversized vector in StoredVector for later use
+            StoredVector = oversizedValue;
             return new Tuple<string, string>(newVector, oversizedValue);
         }
 

@@ -519,11 +519,14 @@ namespace Microsoft.CorrelationVector.UnitTests
             string[] traceSections = traceparent.Split('-');
             var vector = CorrelationVectorV3.Span(traceparent);
 
+            // Convert trace ID to bytes
             var traceIDBytes = new byte[traceSections[1].Length / 2];
             for (var i = 0; i < traceIDBytes.Length; i++)
             {
                 traceIDBytes[i] = Convert.ToByte(traceSections[1].Substring(i * 2, 2), 16);
             }
+
+            // Convert 64-bit representation of base to bytes
             string paddedBase = vector.Base.PadRight(24, '=');
             byte[] cvBaseBytes = Convert.FromBase64String(paddedBase);
             Assert.IsTrue(vector.Value.Contains("-"), "Span vector must contain span indicator");
